@@ -42,7 +42,16 @@
                   "/documentation/getting-started/quickstart/evaluation"
                 ]
               },
-              "/documentation/getting-started/workflow",
+              {
+                "group": "Workflow",
+                "pages": [
+                  "/documentation/getting-started/quickstart/tracing-workflow",
+                  "/documentation/getting-started/quickstart/monitor-workflow",
+                  "/documentation/getting-started/quickstart/evaluate-workflow",
+                  "/documentation/getting-started/quickstart/optimize-workflow",
+                  "/documentation/getting-started/quickstart/deploy-workflow"
+                ]
+              },
               "/documentation/getting-started/data_model"
             ]
           },
