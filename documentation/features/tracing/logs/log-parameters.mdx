@@ -3,7 +3,7 @@ title: "Log fields & parameters"
 description: "Key log fields for tracking users, conversations, and custom properties — plus how to pass them."
 ---
 
-Every log has fields for content (`input`/`output`), metrics (`latency`, `cost`, `usage`), configuration (`temperature`, `tools`), and status (`status_code`, `error_message`). These are automatically populated when using the [LLM Gateway](/documentation/features/llm-gateway/setup), or set manually via the [logging endpoint](/apis/observe/logs/request-logging-endpoint).
+Every log has fields for content (`input`/`output`), metrics (`latency`, `cost`, `usage`), configuration (`temperature`, `tools`), and status (`status_code`, `error_message`). These are automatically populated when using the [LLM Gateway](/documentation/features/gateway/setup), or set manually via the [logging endpoint](/apis/observe/logs/request-logging-endpoint).
 
 This page covers the most important fields you'll configure. For the complete list, see the [Span fields reference](/documentation/resources/reference/span-fields).
 
@@ -70,7 +70,7 @@ const response = await client.chat.completions.create({
 
 ### customer_identifier
 
-`string` — Unique user or customer ID. Use this to track per-user metrics, set [budgets](/documentation/features/observability/customer-identifier#budgets), and apply [rate limits](/documentation/features/observability/customer-identifier#rate-limits).
+`string` — Unique user or customer ID. Use this to track per-user metrics, set [budgets](/documentation/features/user-analytics/customer-identifier#budgets), and apply [rate limits](/documentation/features/user-analytics/customer-identifier#rate-limits).
 
 <Tabs>
 <Tab title="Logging API">
@@ -120,7 +120,7 @@ const response = await client.chat.completions.create({
 </Tab>
 </Tabs>
 
-See [Customer identifier](/documentation/features/observability/customer-identifier) for more.
+See [Customer identifier](/documentation/features/user-analytics/customer-identifier) for more.
 
 ### metadata
 

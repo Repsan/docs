@@ -46,40 +46,56 @@
             "group": "Features",
             "pages": [
               {
-                "group": "Observability",
+                "group": "Tracing",
                 "pages": [
-                  "/documentation/features/observability/metrics",
-                  "/documentation/features/observability/views",
                   {
                     "group": "Logs",
                     "pages": [
-                      "/documentation/features/observability/logs/quickstart",
-                      "/documentation/features/observability/logs/log-content-types",
-                      "/documentation/features/observability/logs/log-parameters",
-                      "/documentation/features/observability/logs/save_log_to_prompt",
-                      "/documentation/features/observability/logs/export_logs",
-                      "/documentation/features/observability/logs/custom_model"
+                      "/documentation/features/tracing/logs/quickstart",
+                      "/documentation/features/tracing/logs/log-content-types",
+                      "/documentation/features/tracing/logs/log-parameters",
+                      "/documentation/features/tracing/logs/save_log_to_prompt",
+                      "/documentation/features/tracing/logs/export_logs",
+                      "/documentation/features/tracing/logs/custom_model"
                     ]
                   },
                   {
                     "group": "Traces",
                     "pages": [
-                      "/documentation/features/observability/traces/quickstart",
-                      "/documentation/features/observability/traces/integration-frameworks",
-                      "/documentation/features/observability/traces/tracing-sdk",
-                      "/documentation/features/observability/traces/manual-ingestion",
-                      "/documentation/features/observability/traces/span-parameters"
+                      "/documentation/features/tracing/traces/quickstart",
+                      "/documentation/features/tracing/traces/integration-frameworks",
+                      "/documentation/features/tracing/traces/tracing-sdk",
+                      "/documentation/features/tracing/traces/manual-ingestion",
+                      "/documentation/features/tracing/traces/span-parameters"
                     ]
-                  },
-                  "/documentation/features/observability/customer-identifier"
+                  }
                 ]
               },
               {
-                "group": "Prompt management",
+                "group": "Monitoring",
                 "pages": [
-                  "/documentation/features/prompt-management/quickstart",
-                  "/documentation/features/prompt-management/manage-prompts",
-                  "/documentation/features/prompt-management/use-prompt"
+                  "/documentation/features/monitoring/metrics",
+                  "/documentation/features/monitoring/views",
+                  {
+                    "group": "Notifications",
+                    "pages": [
+                      "/documentation/features/monitoring/notifications/subscribe_alerts",
+                      "/documentation/features/monitoring/notifications/webhooks"
+                    ]
+                  },
+                  {
+                    "group": "Automations (Beta)",
+                    "pages": [
+                      "/documentation/features/monitoring/automations/quickstart",
+                      "/documentation/features/monitoring/automations/quickstart_online_eval"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "User Analytics",
+                "pages": [
+                  "/documentation/features/user-analytics/customer-identifier"
                 ]
               },
               {
@@ -94,25 +110,19 @@
                 ]
               },
               {
-                "group": "LLM Gateway",
+                "group": "Prompt management",
                 "pages": [
-                  "/documentation/features/llm-gateway/quickstart",
-                  "/documentation/features/llm-gateway/setup",
-                  "/documentation/features/llm-gateway/advanced-configuration"
+                  "/documentation/features/prompt-management/quickstart",
+                  "/documentation/features/prompt-management/manage-prompts",
+                  "/documentation/features/prompt-management/use-prompt"
                 ]
               },
               {
-                "group": "Notifications",
+                "group": "Gateway",
                 "pages": [
-                  "/documentation/features/notifications/subscribe_alerts",
-                  "/documentation/features/notifications/webhooks"
-                ]
-              },
-              {
-                "group": "Automations (Beta)",
-                "pages": [
-                  "/documentation/features/automations/quickstart",
-                  "/documentation/features/automations/quickstart_online_eval"
+                  "/documentation/features/gateway/quickstart",
+                  "/documentation/features/gateway/setup",
+                  "/documentation/features/gateway/advanced-configuration"
                 ]
               },
               {
@@ -918,183 +928,183 @@
     },
     {
       "source": "/documentation/products/dashboard/metrics",
-      "destination": "/documentation/features/observability/metrics"
+      "destination": "/documentation/features/monitoring/metrics"
     },
     {
       "source": "/documentation/products/dashboard/views",
-      "destination": "/documentation/features/observability/views"
+      "destination": "/documentation/features/monitoring/views"
     },
     {
       "source": "/documentation/products/logs/quickstart",
-      "destination": "/documentation/features/observability/logs/quickstart"
+      "destination": "/documentation/features/tracing/logs/quickstart"
     },
     {
       "source": "/documentation/products/logs/configuration/pass_respan_parameters",
-      "destination": "/documentation/features/observability/logs/log-parameters#passing-parameters"
+      "destination": "/documentation/features/tracing/logs/log-parameters#passing-parameters"
     },
     {
       "source": "/documentation/products/logs/configuration/custom_properties",
-      "destination": "/documentation/features/observability/logs/log-parameters#custom-properties"
+      "destination": "/documentation/features/tracing/logs/log-parameters#custom-properties"
     },
     {
       "source": "/documentation/products/logs/log_variables",
-      "destination": "/documentation/features/observability/logs/log-content-types#prompt-variables"
+      "destination": "/documentation/features/tracing/logs/log-content-types#prompt-variables"
     },
     {
       "source": "/documentation/products/logs/log_tool_calls",
-      "destination": "/documentation/features/observability/logs/log-content-types#tool-calls"
+      "destination": "/documentation/features/tracing/logs/log-content-types#tool-calls"
     },
     {
       "source": "/documentation/products/logs/log_images",
-      "destination": "/documentation/features/observability/logs/log-content-types#images"
+      "destination": "/documentation/features/tracing/logs/log-content-types#images"
     },
     {
       "source": "/documentation/products/logs/log_thinking",
-      "destination": "/documentation/features/observability/logs/log-content-types#thinking-blocks"
+      "destination": "/documentation/features/tracing/logs/log-content-types#thinking-blocks"
     },
     {
       "source": "/documentation/products/logs/embedding_logging",
-      "destination": "/documentation/features/observability/logs/log-content-types#embedding"
+      "destination": "/documentation/features/tracing/logs/log-content-types#embedding"
     },
     {
       "source": "/documentation/products/logs/save_log_to_prompt",
-      "destination": "/documentation/features/observability/logs/save_log_to_prompt"
+      "destination": "/documentation/features/tracing/logs/save_log_to_prompt"
     },
     {
       "source": "/documentation/products/logs/configuration/threads",
-      "destination": "/documentation/features/observability/logs/log-parameters#threads"
+      "destination": "/documentation/features/tracing/logs/log-parameters#threads"
     },
     {
       "source": "/documentation/products/logs/export_logs",
-      "destination": "/documentation/features/observability/logs/export_logs"
+      "destination": "/documentation/features/tracing/logs/export_logs"
     },
     {
       "source": "/documentation/products/logs/configuration/group_logs",
-      "destination": "/documentation/features/observability/logs/log-parameters#group-logs"
+      "destination": "/documentation/features/tracing/logs/log-parameters#group-logs"
     },
     {
       "source": "/documentation/products/logs/custom_model",
-      "destination": "/documentation/features/observability/logs/custom_model"
+      "destination": "/documentation/features/tracing/logs/custom_model"
     },
     {
       "source": "/documentation/products/logs/sharing",
-      "destination": "/documentation/features/observability/logs/quickstart"
+      "destination": "/documentation/features/tracing/logs/quickstart"
     },
     {
-      "source": "/documentation/features/observability/logs/sharing",
-      "destination": "/documentation/features/observability/logs/quickstart"
+      "source": "/documentation/features/tracing/logs/sharing",
+      "destination": "/documentation/features/tracing/logs/quickstart"
     },
     {
-      "source": "/documentation/features/observability/logs/configuration/pass_respan_parameters",
-      "destination": "/documentation/features/observability/logs/log-parameters#passing-parameters"
+      "source": "/documentation/features/tracing/logs/configuration/pass_respan_parameters",
+      "destination": "/documentation/features/tracing/logs/log-parameters#passing-parameters"
     },
     {
-      "source": "/documentation/features/observability/logs/configuration/custom_properties",
-      "destination": "/documentation/features/observability/logs/log-parameters#custom-properties"
+      "source": "/documentation/features/tracing/logs/configuration/custom_properties",
+      "destination": "/documentation/features/tracing/logs/log-parameters#custom-properties"
     },
     {
-      "source": "/documentation/features/observability/logs/configuration/threads",
-      "destination": "/documentation/features/observability/logs/log-parameters#threads"
+      "source": "/documentation/features/tracing/logs/configuration/threads",
+      "destination": "/documentation/features/tracing/logs/log-parameters#threads"
     },
     {
-      "source": "/documentation/features/observability/logs/configuration/group_logs",
-      "destination": "/documentation/features/observability/logs/log-parameters#group-logs"
+      "source": "/documentation/features/tracing/logs/configuration/group_logs",
+      "destination": "/documentation/features/tracing/logs/log-parameters#group-logs"
     },
     {
-      "source": "/documentation/features/observability/logs/log_variables",
-      "destination": "/documentation/features/observability/logs/log-content-types#prompt-variables"
+      "source": "/documentation/features/tracing/logs/log_variables",
+      "destination": "/documentation/features/tracing/logs/log-content-types#prompt-variables"
     },
     {
-      "source": "/documentation/features/observability/logs/log_tool_calls",
-      "destination": "/documentation/features/observability/logs/log-content-types#tool-calls"
+      "source": "/documentation/features/tracing/logs/log_tool_calls",
+      "destination": "/documentation/features/tracing/logs/log-content-types#tool-calls"
     },
     {
-      "source": "/documentation/features/observability/logs/log_images",
-      "destination": "/documentation/features/observability/logs/log-content-types#images"
+      "source": "/documentation/features/tracing/logs/log_images",
+      "destination": "/documentation/features/tracing/logs/log-content-types#images"
     },
     {
-      "source": "/documentation/features/observability/logs/log_thinking",
-      "destination": "/documentation/features/observability/logs/log-content-types#thinking-blocks"
+      "source": "/documentation/features/tracing/logs/log_thinking",
+      "destination": "/documentation/features/tracing/logs/log-content-types#thinking-blocks"
     },
     {
-      "source": "/documentation/features/observability/logs/embedding_logging",
-      "destination": "/documentation/features/observability/logs/log-content-types#embedding"
+      "source": "/documentation/features/tracing/logs/embedding_logging",
+      "destination": "/documentation/features/tracing/logs/log-content-types#embedding"
     },
     {
       "source": "/documentation/products/traces/quickstart",
-      "destination": "/documentation/features/observability/traces/quickstart"
+      "destination": "/documentation/features/tracing/traces/quickstart"
     },
     {
       "source": "/documentation/products/traces/decorators",
-      "destination": "/documentation/features/observability/traces/tracing-sdk"
+      "destination": "/documentation/features/tracing/traces/tracing-sdk"
     },
     {
-      "source": "/documentation/features/observability/traces/decorators",
-      "destination": "/documentation/features/observability/traces/tracing-sdk"
+      "source": "/documentation/features/tracing/traces/decorators",
+      "destination": "/documentation/features/tracing/traces/tracing-sdk"
     },
     {
       "source": "/documentation/products/traces/configuration/pass_respan_parameters",
-      "destination": "/documentation/features/observability/traces/span-parameters"
+      "destination": "/documentation/features/tracing/traces/span-parameters"
     },
     {
-      "source": "/documentation/features/observability/traces/configuration/pass_respan_parameters",
-      "destination": "/documentation/features/observability/traces/span-parameters"
+      "source": "/documentation/features/tracing/traces/configuration/pass_respan_parameters",
+      "destination": "/documentation/features/tracing/traces/span-parameters"
     },
     {
       "source": "/documentation/products/traces/configuration/group_traces",
-      "destination": "/documentation/features/observability/traces/span-parameters#group-traces"
+      "destination": "/documentation/features/tracing/traces/span-parameters#group-traces"
     },
     {
-      "source": "/documentation/features/observability/traces/configuration/group_traces",
-      "destination": "/documentation/features/observability/traces/span-parameters#group-traces"
+      "source": "/documentation/features/tracing/traces/configuration/group_traces",
+      "destination": "/documentation/features/tracing/traces/span-parameters#group-traces"
     },
     {
       "source": "/documentation/products/traces/configuration/customer_identifier",
-      "destination": "/documentation/features/observability/traces/span-parameters#customer-identifier"
+      "destination": "/documentation/features/tracing/traces/span-parameters#customer-identifier"
     },
     {
-      "source": "/documentation/features/observability/traces/configuration/customer_identifier",
-      "destination": "/documentation/features/observability/traces/span-parameters#customer-identifier"
+      "source": "/documentation/features/tracing/traces/configuration/customer_identifier",
+      "destination": "/documentation/features/tracing/traces/span-parameters#customer-identifier"
     },
     {
       "source": "/documentation/products/traces/override-span-input-output",
-      "destination": "/documentation/features/observability/traces/tracing-sdk#override-span-input--output"
+      "destination": "/documentation/features/tracing/traces/tracing-sdk#override-span-input--output"
     },
     {
-      "source": "/documentation/features/observability/traces/override-span-input-output",
-      "destination": "/documentation/features/observability/traces/tracing-sdk#override-span-input--output"
+      "source": "/documentation/features/tracing/traces/override-span-input-output",
+      "destination": "/documentation/features/tracing/traces/tracing-sdk#override-span-input--output"
     },
     {
       "source": "/documentation/products/traces/logs_to_trace",
-      "destination": "/documentation/features/observability/traces/manual-ingestion"
+      "destination": "/documentation/features/tracing/traces/manual-ingestion"
     },
     {
-      "source": "/documentation/features/observability/traces/logs_to_trace",
-      "destination": "/documentation/features/observability/traces/manual-ingestion"
+      "source": "/documentation/features/tracing/traces/logs_to_trace",
+      "destination": "/documentation/features/tracing/traces/manual-ingestion"
     },
     {
-      "source": "/documentation/features/observability/traces/ingest-traces",
-      "destination": "/documentation/features/observability/traces/manual-ingestion"
+      "source": "/documentation/features/tracing/traces/ingest-traces",
+      "destination": "/documentation/features/tracing/traces/manual-ingestion"
     },
     {
       "source": "/documentation/products/users/customer-identifier",
-      "destination": "/documentation/features/observability/customer-identifier"
+      "destination": "/documentation/features/user-analytics/customer-identifier"
     },
     {
       "source": "/documentation/products/users/user_rate_limit",
-      "destination": "/documentation/features/observability/customer-identifier#rate-limits"
+      "destination": "/documentation/features/user-analytics/customer-identifier#rate-limits"
     },
     {
       "source": "/documentation/features/observability/users/user_rate_limit",
-      "destination": "/documentation/features/observability/customer-identifier#rate-limits"
+      "destination": "/documentation/features/user-analytics/customer-identifier#rate-limits"
     },
     {
       "source": "/documentation/products/users/user-budget",
-      "destination": "/documentation/features/observability/customer-identifier#budgets"
+      "destination": "/documentation/features/user-analytics/customer-identifier#budgets"
     },
     {
       "source": "/documentation/features/observability/users/user-budget",
-      "destination": "/documentation/features/observability/customer-identifier#budgets"
+      "destination": "/documentation/features/user-analytics/customer-identifier#budgets"
     },
     {
       "source": "/documentation/products/prompt_management/quickstart",
@@ -1238,115 +1248,115 @@
     },
     {
       "source": "/documentation/products/gateway/configuration/models",
-      "destination": "/documentation/features/llm-gateway/setup"
+      "destination": "/documentation/features/gateway/setup"
     },
     {
       "source": "/documentation/products/gateway/traffic_management/load-balancing",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#load-balancing"
+      "destination": "/documentation/features/gateway/advanced-configuration#load-balancing"
     },
     {
       "source": "/documentation/products/gateway/traffic_management/retries",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#retries"
+      "destination": "/documentation/features/gateway/advanced-configuration#retries"
     },
     {
       "source": "/documentation/products/gateway/traffic_management/fallbacks",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#fallback-models"
+      "destination": "/documentation/features/gateway/advanced-configuration#fallback-models"
     },
     {
       "source": "/documentation/products/gateway/traffic_management/rate_limit",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#rate-limit"
+      "destination": "/documentation/features/gateway/advanced-configuration#rate-limit"
     },
     {
       "source": "/documentation/products/gateway/performance_optimization/caches",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#caches"
+      "destination": "/documentation/features/gateway/advanced-configuration#caches"
     },
     {
       "source": "/documentation/products/gateway/performance_optimization/prompt-caching",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#prompt-caching"
+      "destination": "/documentation/features/gateway/advanced-configuration#prompt-caching"
     },
     {
       "source": "/documentation/products/gateway/advanced_features/function_calling",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#function-calling"
+      "destination": "/documentation/features/gateway/advanced-configuration#function-calling"
     },
     {
       "source": "/documentation/products/gateway/advanced_features/thinking",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#enable-thinking"
+      "destination": "/documentation/features/gateway/advanced-configuration#enable-thinking"
     },
     {
       "source": "/documentation/products/gateway/advanced_features/upload_pdf",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#upload-pdf"
+      "destination": "/documentation/features/gateway/advanced-configuration#upload-pdf"
     },
     {
       "source": "/documentation/products/gateway/advanced_features/upload_image",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#upload-image"
+      "destination": "/documentation/features/gateway/advanced-configuration#upload-image"
     },
     {
       "source": "/documentation/products/gateway/monitoring_analysis/disable_logging",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#disable-logging"
+      "destination": "/documentation/features/gateway/advanced-configuration#disable-logging"
     },
     {
-      "source": "/documentation/features/llm-gateway/configuration/models",
-      "destination": "/documentation/features/llm-gateway/setup"
+      "source": "/documentation/features/gateway/configuration/models",
+      "destination": "/documentation/features/gateway/setup"
     },
     {
-      "source": "/documentation/features/llm-gateway/traffic_management/load-balancing",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#load-balancing"
+      "source": "/documentation/features/gateway/traffic_management/load-balancing",
+      "destination": "/documentation/features/gateway/advanced-configuration#load-balancing"
     },
     {
-      "source": "/documentation/features/llm-gateway/traffic_management/retries",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#retries"
+      "source": "/documentation/features/gateway/traffic_management/retries",
+      "destination": "/documentation/features/gateway/advanced-configuration#retries"
     },
     {
-      "source": "/documentation/features/llm-gateway/traffic_management/fallbacks",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#fallback-models"
+      "source": "/documentation/features/gateway/traffic_management/fallbacks",
+      "destination": "/documentation/features/gateway/advanced-configuration#fallback-models"
     },
     {
-      "source": "/documentation/features/llm-gateway/traffic_management/rate_limit",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#rate-limit"
+      "source": "/documentation/features/gateway/traffic_management/rate_limit",
+      "destination": "/documentation/features/gateway/advanced-configuration#rate-limit"
     },
     {
-      "source": "/documentation/features/llm-gateway/performance_optimization/caches",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#caches"
+      "source": "/documentation/features/gateway/performance_optimization/caches",
+      "destination": "/documentation/features/gateway/advanced-configuration#caches"
     },
     {
-      "source": "/documentation/features/llm-gateway/performance_optimization/prompt-caching",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#prompt-caching"
+      "source": "/documentation/features/gateway/performance_optimization/prompt-caching",
+      "destination": "/documentation/features/gateway/advanced-configuration#prompt-caching"
     },
     {
-      "source": "/documentation/features/llm-gateway/advanced_features/function_calling",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#function-calling"
+      "source": "/documentation/features/gateway/advanced_features/function_calling",
+      "destination": "/documentation/features/gateway/advanced-configuration#function-calling"
     },
     {
-      "source": "/documentation/features/llm-gateway/advanced_features/thinking",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#enable-thinking"
+      "source": "/documentation/features/gateway/advanced_features/thinking",
+      "destination": "/documentation/features/gateway/advanced-configuration#enable-thinking"
     },
     {
-      "source": "/documentation/features/llm-gateway/advanced_features/upload_pdf",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#upload-pdf"
+      "source": "/documentation/features/gateway/advanced_features/upload_pdf",
+      "destination": "/documentation/features/gateway/advanced-configuration#upload-pdf"
     },
     {
-      "source": "/documentation/features/llm-gateway/advanced_features/upload_image",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#upload-image"
+      "source": "/documentation/features/gateway/advanced_features/upload_image",
+      "destination": "/documentation/features/gateway/advanced-configuration#upload-image"
     },
     {
-      "source": "/documentation/features/llm-gateway/monitoring_analysis/disable_logging",
-      "destination": "/documentation/features/llm-gateway/advanced-configuration#disable-logging"
+      "source": "/documentation/features/gateway/monitoring_analysis/disable_logging",
+      "destination": "/documentation/features/gateway/advanced-configuration#disable-logging"
     },
     {
       "source": "/documentation/products/notifications/subscribe_alerts",
-      "destination": "/documentation/features/notifications/subscribe_alerts"
+      "destination": "/documentation/features/monitoring/notifications/subscribe_alerts"
     },
     {
       "source": "/documentation/products/notifications/webhooks",
-      "destination": "/documentation/features/notifications/webhooks"
+      "destination": "/documentation/features/monitoring/notifications/webhooks"
     },
     {
       "source": "/documentation/products/automation/quickstart",
-      "destination": "/documentation/features/automations/quickstart"
+      "destination": "/documentation/features/monitoring/automations/quickstart"
     },
     {
       "source": "/documentation/products/automation/quickstart_online_eval",
-      "destination": "/documentation/features/automations/quickstart_online_eval"
+      "destination": "/documentation/features/monitoring/automations/quickstart_online_eval"
     },
     {
       "source": "/documentation/products/mcp/docs-mcp",
@@ -1355,6 +1365,90 @@
     {
       "source": "/documentation/products/mcp/platform-mcp",
       "destination": "/documentation/features/mcp/platform-mcp"
+    },
+    {
+      "source": "/documentation/features/observability/metrics",
+      "destination": "/documentation/features/monitoring/metrics"
+    },
+    {
+      "source": "/documentation/features/observability/views",
+      "destination": "/documentation/features/monitoring/views"
+    },
+    {
+      "source": "/documentation/features/observability/logs/quickstart",
+      "destination": "/documentation/features/tracing/logs/quickstart"
+    },
+    {
+      "source": "/documentation/features/observability/logs/log-content-types",
+      "destination": "/documentation/features/tracing/logs/log-content-types"
+    },
+    {
+      "source": "/documentation/features/observability/logs/log-parameters",
+      "destination": "/documentation/features/tracing/logs/log-parameters"
+    },
+    {
+      "source": "/documentation/features/observability/logs/save_log_to_prompt",
+      "destination": "/documentation/features/tracing/logs/save_log_to_prompt"
+    },
+    {
+      "source": "/documentation/features/observability/logs/export_logs",
+      "destination": "/documentation/features/tracing/logs/export_logs"
+    },
+    {
+      "source": "/documentation/features/observability/logs/custom_model",
+      "destination": "/documentation/features/tracing/logs/custom_model"
+    },
+    {
+      "source": "/documentation/features/observability/traces/quickstart",
+      "destination": "/documentation/features/tracing/traces/quickstart"
+    },
+    {
+      "source": "/documentation/features/observability/traces/integration-frameworks",
+      "destination": "/documentation/features/tracing/traces/integration-frameworks"
+    },
+    {
+      "source": "/documentation/features/observability/traces/tracing-sdk",
+      "destination": "/documentation/features/tracing/traces/tracing-sdk"
+    },
+    {
+      "source": "/documentation/features/observability/traces/manual-ingestion",
+      "destination": "/documentation/features/tracing/traces/manual-ingestion"
+    },
+    {
+      "source": "/documentation/features/observability/traces/span-parameters",
+      "destination": "/documentation/features/tracing/traces/span-parameters"
+    },
+    {
+      "source": "/documentation/features/observability/customer-identifier",
+      "destination": "/documentation/features/user-analytics/customer-identifier"
+    },
+    {
+      "source": "/documentation/features/llm-gateway/quickstart",
+      "destination": "/documentation/features/gateway/quickstart"
+    },
+    {
+      "source": "/documentation/features/llm-gateway/setup",
+      "destination": "/documentation/features/gateway/setup"
+    },
+    {
+      "source": "/documentation/features/llm-gateway/advanced-configuration",
+      "destination": "/documentation/features/gateway/advanced-configuration"
+    },
+    {
+      "source": "/documentation/features/notifications/subscribe_alerts",
+      "destination": "/documentation/features/monitoring/notifications/subscribe_alerts"
+    },
+    {
+      "source": "/documentation/features/notifications/webhooks",
+      "destination": "/documentation/features/monitoring/notifications/webhooks"
+    },
+    {
+      "source": "/documentation/features/automations/quickstart",
+      "destination": "/documentation/features/monitoring/automations/quickstart"
+    },
+    {
+      "source": "/documentation/features/automations/quickstart_online_eval",
+      "destination": "/documentation/features/monitoring/automations/quickstart_online_eval"
     }
   ]
 }

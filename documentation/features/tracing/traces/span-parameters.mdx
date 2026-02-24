@@ -3,7 +3,7 @@ title: "Tracing parameters"
 description: "Attach metadata, customer identifiers, and other parameters to your spans — same fields as log parameters, passed through your tracing setup."
 ---
 
-Every span is a [log](/documentation/features/observability/logs/quickstart) with hierarchical context. All fields available on [log fields & parameters](/documentation/features/observability/logs/log-parameters) are also available on spans. This page covers the most important trace-specific fields. For the complete list, see the [Span fields reference](/documentation/resources/reference/span-fields).
+Every span is a [log](/documentation/features/tracing/logs/quickstart) with hierarchical context. All fields available on [log fields & parameters](/documentation/features/tracing/logs/log-parameters) are also available on spans. This page covers the most important trace-specific fields. For the complete list, see the [Span fields reference](/documentation/resources/reference/span-fields).
 
 ---
 
@@ -81,7 +81,7 @@ const result = streamText({
 
 ### customer_identifier
 
-`string` — Unique user or customer ID. Applies to all spans in the trace. Use this to track per-user metrics, set [budgets](/documentation/features/observability/customer-identifier#budgets), and apply [rate limits](/documentation/features/observability/customer-identifier#rate-limits).
+`string` — Unique user or customer ID. Applies to all spans in the trace. Use this to track per-user metrics, set [budgets](/documentation/features/user-analytics/customer-identifier#budgets), and apply [rate limits](/documentation/features/user-analytics/customer-identifier#rate-limits).
 
 <Tabs>
 <Tab title="Respan (OTel)">
@@ -128,7 +128,7 @@ const result = streamText({
 </Tab>
 </Tabs>
 
-See [Customer identifier](/documentation/features/observability/customer-identifier) for more.
+See [Customer identifier](/documentation/features/user-analytics/customer-identifier) for more.
 
 ### metadata
 

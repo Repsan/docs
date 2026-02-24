@@ -22,7 +22,7 @@ Start by reviewing production logs on the [Logs page](https://platform.respan.ai
 - Logs flagged by users (negative feedback)
 - Logs with specific metadata tags (e.g., `feature: "support_chat"`)
 
-Use [saved views](/documentation/features/observability/views) to create a filter for logs you want to investigate.
+Use [saved views](/documentation/features/monitoring/views) to create a filter for logs you want to investigate.
 
 ## 2. Save logs to a dataset
 
@@ -125,7 +125,7 @@ Once you've identified the better prompt version:
 
 1. Go to **Prompts** and set the winning version as the active version
 2. Your production code automatically picks up the new version (if using the Prompts API)
-3. Set up [online evaluation](/documentation/features/automations/quickstart_online_eval) to continuously monitor the deployed version
+3. Set up [online evaluation](/documentation/features/monitoring/automations/quickstart_online_eval) to continuously monitor the deployed version
 
 ## The full loop
 
@@ -151,7 +151,7 @@ This loop gets faster over time. As your dataset grows and evaluators mature, ea
 <Card title="Experiments" icon="flask" href="/documentation/features/evals/experiments/experiments">
   Run and compare experiments
 </Card>
-<Card title="Online evaluation" icon="gauge" href="/documentation/features/automations/quickstart_online_eval">
+<Card title="Online evaluation" icon="gauge" href="/documentation/features/monitoring/automations/quickstart_online_eval">
   Monitor production quality continuously
 </Card>
 </CardGroup>

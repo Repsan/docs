@@ -28,7 +28,7 @@ All four views show the **same underlying data** - they just organize and presen
 
 ## How Respan stores your data
 
-When you send an LLM request through Respan — whether via the [LLM Gateway](/documentation/features/llm-gateway/setup), the [logging API](/documentation/features/observability/logs/quickstart), or a [tracing SDK](/documentation/getting-started/quickstart/tracing) — Respan creates a **log** record.
+When you send an LLM request through Respan — whether via the [LLM Gateway](/documentation/features/gateway/setup), the [logging API](/documentation/features/tracing/logs/quickstart), or a [tracing SDK](/documentation/getting-started/quickstart/tracing) — Respan creates a **log** record.
 
 Every log uses a universal `input` / `output` design. The system automatically:
 - Serializes your data regardless of format (messages array, text string, embeddings vector, audio metadata)
@@ -49,7 +49,7 @@ A log captures everything about a single LLM interaction:
 | **Config** | LLM settings | `temperature`, `max_tokens`, `tools` |
 | **Status** | Success or failure | `status_code`, `error_message` |
 
-For the complete field reference, see [Log fields & parameters](/documentation/features/observability/logs/log-parameters). For per-type input/output formats, see [Log types](/documentation/features/observability/logs/log-content-types).
+For the complete field reference, see [Log fields & parameters](/documentation/features/tracing/logs/log-parameters). For per-type input/output formats, see [Log types](/documentation/features/tracing/logs/log-content-types).
 
 ## Logs
 
@@ -57,7 +57,7 @@ For the complete field reference, see [Log fields & parameters](/documentation/f
 A log represents a single LLM request. This is the foundational data that powers all other views.
 </Info>
 
-Every log has a `log_type` that determines its input/output format. The most common is `chat` (messages in, assistant message out), but Respan also supports `embedding`, `speech`, `transcription`, `workflow`, `agent`, and more. See [Log types](/documentation/features/observability/logs/log-content-types) for the full list.
+Every log has a `log_type` that determines its input/output format. The most common is `chat` (messages in, assistant message out), but Respan also supports `embedding`, `speech`, `transcription`, `workflow`, `agent`, and more. See [Log types](/documentation/features/tracing/logs/log-content-types) for the full list.
 
 ## Traces
 

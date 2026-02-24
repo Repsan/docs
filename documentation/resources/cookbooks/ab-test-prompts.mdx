@@ -135,7 +135,7 @@ async function callWithAbTest(customerId: string, userMessage: string) {
 
 ## 4. Evaluate both variants
 
-Set up an [online evaluation automation](/documentation/features/automations/quickstart_online_eval) to score both variants automatically:
+Set up an [online evaluation automation](/documentation/features/monitoring/automations/quickstart_online_eval) to score both variants automatically:
 
 1. **Create an evaluator** that scores response quality (e.g., helpfulness, accuracy)
 2. **Create a condition** that matches logs with `metadata.experiment = "support_prompt_ab_test"`
@@ -158,7 +158,7 @@ Once you have enough data, promote the winning version and update your rollout t
 <Card title="Prompt management" icon="wand-magic-sparkles" href="/documentation/features/prompt-management/quickstart">
   Create and version prompts
 </Card>
-<Card title="Online evaluation" icon="gauge" href="/documentation/features/automations/quickstart_online_eval">
+<Card title="Online evaluation" icon="gauge" href="/documentation/features/monitoring/automations/quickstart_online_eval">
   Set up automated scoring on live traffic
 </Card>
 </CardGroup>

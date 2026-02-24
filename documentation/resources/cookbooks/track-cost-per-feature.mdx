@@ -147,7 +147,7 @@ Once your requests are tagged, go to the [Dashboard](https://platform.respan.ai/
 1. **Cost by feature**: Filter by `metadata.feature` to see cost per feature over time
 2. **Cost by user**: Go to [Users](https://platform.respan.ai/platform/users) to see total cost per customer
 3. **Cost by model**: Use model breakdown to see which models drive the most spend
-4. **Custom views**: Create [saved views](/documentation/features/observability/views) with preset filters for recurring cost analysis
+4. **Custom views**: Create [saved views](/documentation/features/monitoring/views) with preset filters for recurring cost analysis
 
 ## Set user budgets
 
@@ -167,15 +167,15 @@ requests.post(
 )
 ```
 
-When a user exceeds their budget, Respan blocks further requests and returns a `429` status. See [User budgets](/documentation/features/observability/customer-identifier#budgets) for details.
+When a user exceeds their budget, Respan blocks further requests and returns a `429` status. See [User budgets](/documentation/features/user-analytics/customer-identifier#budgets) for details.
 
 ## Next steps
 
 <CardGroup cols={2}>
-<Card title="Customer identifier" icon="user" href="/documentation/features/observability/customer-identifier">
+<Card title="Customer identifier" icon="user" href="/documentation/features/user-analytics/customer-identifier">
   Track users, set budgets and rate limits
 </Card>
-<Card title="Dashboard" icon="chart-line" href="/documentation/features/observability/metrics">
+<Card title="Dashboard" icon="chart-line" href="/documentation/features/monitoring/metrics">
   Monitor metrics and trends
 </Card>
 </CardGroup>

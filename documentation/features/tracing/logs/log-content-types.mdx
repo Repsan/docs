@@ -7,7 +7,7 @@ description: "How to log different types of LLM interactions — chat completion
 
 Every log has a `log_type` field that determines its input/output format. The most common type is `chat`, but Respan supports logging embeddings, audio, tool calls, and workflow spans.
 
-All log types use universal `input` and `output` fields and are sent to the same [logging endpoint](/apis/observe/logs/request-logging-endpoint). For the complete field reference, see [Log fields & parameters](/documentation/features/observability/logs/log-parameters).
+All log types use universal `input` and `output` fields and are sent to the same [logging endpoint](/apis/observe/logs/request-logging-endpoint). For the complete field reference, see [Log fields & parameters](/documentation/features/tracing/logs/log-parameters).
 
 ### All log types
 
@@ -135,7 +135,7 @@ When using models with thinking capabilities (e.g. Claude with extended thinking
 }
 ```
 
-For more on enabling thinking mode via the gateway, see [Enable Thinking](/documentation/features/llm-gateway/advanced-configuration#enable-thinking).
+For more on enabling thinking mode via the gateway, see [Enable Thinking](/documentation/features/gateway/advanced-configuration#enable-thinking).
 
 ### Prompt variables
 
@@ -329,7 +329,7 @@ Set `log_type` to `"speech"`. Input is text, output is audio metadata.
 
 ## Workflow & agent types
 
-These log types are used by [tracing](/documentation/features/observability/traces/quickstart) to represent spans in a trace hierarchy:
+These log types are used by [tracing](/documentation/features/tracing/traces/quickstart) to represent spans in a trace hierarchy:
 
 - **`workflow`** — Root-level workflow orchestration
 - **`task`** — Individual task within a workflow
@@ -338,4 +338,4 @@ These log types are used by [tracing](/documentation/features/observability/trac
 - **`handoff`** — Agent-to-agent transfer
 - **`guardrail`** — Safety and validation check
 
-For details on how to create and orchestrate these span types, see [Orchestration](/documentation/features/observability/traces/span-types).
+For details on how to create and orchestrate these span types, see [Orchestration](/documentation/features/tracing/traces/span-types).
