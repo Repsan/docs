@@ -128,8 +128,8 @@
               {
                 "group": "MCP",
                 "pages": [
-                  "/documentation/features/mcp/docs-mcp",
-                  "/documentation/features/mcp/platform-mcp"
+                  "/documentation/features/mcp/platform-mcp",
+                  "/documentation/features/mcp/docs-mcp"
                 ]
               }
             ]
@@ -314,8 +314,6 @@
                   "/apis/observe/logs/logs-list-endpoint",
                   "/apis/observe/logs/logs-summary-endpoint",
                   "/apis/observe/logs/get-log-endpoint",
-                  "/apis/observe/logs/update-single-log-endpoint",
-                  "/apis/observe/logs/logs-update-endpoint",
                   "/apis/observe/logs/ingest"
                 ]
               },
