@@ -4,6 +4,13 @@ description: "Test, score, and improve your AI system"
 icon: "flask"
 ---
 
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
+
+
 ## Evaluate
 
 Once you have data flowing into Respan, you can start evaluating your AI system. The goal is to compare different versions of your prompts, models, and configurations so you ship the best version with confidence. See the [evaluation quickstart](/documentation/getting-started/quickstart/evaluation) for a hands-on walkthrough.
@@ -21,5 +28,5 @@ Here's how the eval pipeline works:
 After identifying the best configuration from your experiments, iterate and deploy:
 
 - **[Manage prompts](/documentation/features/prompt-management/manage-prompts)**: edit your prompt, commit a new version, and run another experiment. Repeat until you're confident in the result.
-- **[Deploy to production](/documentation/features/prompt-management/use-prompt)**: push the winning version live with one click. All API calls using this prompt automatically pick up the new version, no code changes needed.
+- **[Deploy to production](/documentation/features/prompt-management/manage-prompts#deployment--versioning)**: push the winning version live with one click. All API calls using this prompt automatically pick up the new version, no code changes needed.
 - **[Online evaluation](/documentation/features/monitoring/automations/quickstart_online_eval)**: keep quality high after deployment by running evaluators on live traffic automatically. Get alerted when scores drop.

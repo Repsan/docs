@@ -1,27 +1,30 @@
 ---
-title: Braintrust
-description: "Send Braintrust logs/spans to Respan for tracing."
+title: "Braintrust"
+description: "Send Braintrust logs and spans to Respan for tracing."
 ---
 
-## Overview
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
 
-Use `respan-exporter-braintrust` to export [Braintrust](https://www.braintrust.dev/) log records (including nested spans) to Respan Traces. You can keep using Braintrust's logger APIs; the exporter installs itself as Braintrust's background logger and forwards records to Respan.
+## What is Braintrust?
 
-## Quickstart
+[Braintrust](https://www.braintrust.dev/) is an AI evaluation and observability platform. Use `respan-exporter-braintrust` to export Braintrust log records (including nested spans) to Respan Traces. You can keep using Braintrust's logger APIs; the exporter installs itself as Braintrust's background logger and forwards records to Respan.
 
-### Step 1: Get a Respan API key
+## Setup
 
-Create an API key in your Respan dashboard.
-
-### Step 2: Install packages
+<Steps>
+<Step title="Install packages">
 
 ```bash
 pip install braintrust respan-exporter-braintrust
 ```
 
-### Step 3: Set environment variables
+</Step>
 
-Create a `.env` or export environment variables:
+<Step title="Set environment variables">
 
 ```bash .env
 RESPAN_API_KEY=your-respan-api-key
@@ -29,24 +32,18 @@ RESPAN_API_KEY=your-respan-api-key
 RESPAN_BASE_URL=https://api.respan.ai/api
 ```
 
-### Step 4: Run Braintrust with the Respan exporter
+</Step>
 
-Create a file like `quickstart.py`:
+<Step title="Run Braintrust with the Respan exporter">
 
 ```python
 import os
 import time
-
 import braintrust
-
 from respan_exporter_braintrust import RespanBraintrustExporter
 
-
-def main() -> None:
-    # Export Braintrust records to Respan
+def main():
     with RespanBraintrustExporter(raise_on_error=True):
-        # This creates a Braintrust logger and a root+child span.
-        # (Using TEST_API_KEY keeps the example self-contained.)
         logger = braintrust.init_logger(
             project="Respan Braintrust Quickstart",
             project_id="respan-braintrust-quickstart",
@@ -65,35 +62,32 @@ def main() -> None:
                     metadata={"model": "gpt-4o-mini"},
                 )
 
-        # Flush Braintrust -> exporter -> Respan
         logger.flush()
-
-    print("✓ Sent Braintrust trace to Respan (check Traces page).")
-
 
 if __name__ == "__main__":
     main()
 ```
 
-### Step 5: View your trace
+</Step>
 
-Open the Traces page in your Respan dashboard.
+<Step title="View your trace">
 
-## Use Braintrust + OpenAI (optional)
+Open the [Traces page](https://platform.respan.ai/platform/traces) in the Respan dashboard.
+
+</Step>
+</Steps>
+
+## Examples
+
+### Braintrust + OpenAI
 
 If you're using Braintrust's OpenAI wrapper (`wrap_openai`), you can still export everything to Respan:
-
-```bash
-pip install openai
-```
 
 ```python
 import os
 from braintrust import init_logger, wrap_openai
 from openai import OpenAI
 from respan_exporter_braintrust import RespanBraintrustExporter
-
-os.environ["RESPAN_API_KEY"] = "your-respan-key"
 
 with RespanBraintrustExporter() as exporter:
     logger = init_logger(project="Email Classifier")
@@ -111,3 +105,14 @@ with RespanBraintrustExporter() as exporter:
 
     logger.flush()
 ```
+
+## Observability
+
+With this integration, Respan auto-captures:
+
+- **Braintrust spans** -- root and child spans
+- **LLM calls** -- model, input/output, token usage
+- **Custom metadata** -- any metadata attached to spans
+- **Errors** -- failed calls and error details
+
+View traces on the [Traces page](https://platform.respan.ai/platform/traces).

@@ -1,33 +1,32 @@
 ---
-title: Mastra
-description: Use Mastra with Respan
-og:title: 'Mastra with Respan'
+title: "Mastra"
+description: "Trace your Mastra AI agents with Respan for workflow visibility."
 ---
 
-This tutorial shows how to set up Respan tracing with [Mastra](https://mastra.ai/) to monitor and trace your AI-powered applications.
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
 
-To help you get started quickly, we’ve provided a pre-built example. You can find the code [on GitHub](https://github.com/Repsan/respan-example-projects/tree/main/mastra-ai-weather-agent).
+## What is Mastra?
 
+[Mastra](https://mastra.ai/) is a TypeScript framework for building AI agents and workflows. This guide shows how to set up Respan tracing with Mastra to monitor your AI-powered applications.
+
+- [Example repo](https://github.com/Repsan/respan-example-projects/tree/main/mastra-ai-weather-agent)
 
 ## Setup
 
-Here's the tutorial about the Mastra Weather Agent example.
-
-### 1. Install Dependencies
+<Steps>
+<Step title="Install dependencies">
 
 ```bash
 pnpm install
 ```
 
-### 2. Environment Variables
+</Step>
 
-Copy the example environment file and add your API keys:
-
-```bash
-cp .env.local.example .env.local
-```
-
-Update .env.local with your credentials: 
+<Step title="Set environment variables">
 
 ```bash .env.local
 OPENAI_API_KEY=your-openai-api-key
@@ -35,16 +34,19 @@ RESPAN_API_KEY=your-respan-api-key
 RESPAN_BASE_URL=https://api.respan.ai
 ```
 
-### 3. Setup Mastra client with Respan tracing
+</Step>
 
-Configure with Respan telemetry in `src/mastra/index.ts`:
+<Step title="Configure Mastra with Respan telemetry">
 
-```typescript
+In your Mastra config (e.g. `src/mastra/index.ts`), set the telemetry export to use the Respan exporter:
+
+```typescript src/mastra/index.ts
+import { RespanExporter } from "@respan/exporter-vercel";
+
+// Inside your Mastra config
 telemetry: {
   serviceName: "respan-mastra-example",
   enabled: true,
-
-# ===== Add this section =====
   export: {
     type: "custom",
     exporter: new RespanExporter({
@@ -56,15 +58,32 @@ telemetry: {
 }
 ```
 
-### 3. Run the Project
+</Step>
+
+<Step title="Run the project">
 
 ```bash
 mastra dev
 ```
-This opens the Mastra playground where you can interact with the weather agent.
+
+This opens the Mastra playground where you can interact with the agent.
+
+</Step>
+
+<Step title="View your trace">
+
+Open the [Traces page](https://platform.respan.ai/platform/traces) in the Respan dashboard.
+
+</Step>
+</Steps>
 
 ## Observability
 
-Once configured, you can view your traces and analytics in the [Respan platform](https://platform.respan.ai/platform/traces).
+With this integration, Respan auto-captures:
 
+- **Agent runs** -- each agent execution as a span
+- **LLM calls** -- model, input/output messages, token usage
+- **Performance metrics** -- latency per step
+- **Errors** -- failed runs and error details
 
+View traces on the [Traces page](https://platform.respan.ai/platform/traces).

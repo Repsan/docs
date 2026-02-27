@@ -2,6 +2,13 @@
 title: "Chat completion"
 description: "Complete guide to integrating Respan with OpenAI SDK for seamless LLM gateway usage."
 ---
+
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
+
 <Note> This integration is for the **Respan gateway**. </Note>
 
 ## Overview
@@ -200,6 +207,61 @@ const response = await client.chat.completions.create({
     metadata: { session_id: "abc123" },        // Custom metadata
     thread_identifier: "conversation_456",     // Group related messages
     group_identifier: "team_alpha",           // Organize by groups
+});
+```
+</CodeGroup>
+
+### Prompt composition
+
+A variable in one prompt can reference another prompt. The child prompt is rendered first and injected into the parent. See [Prompt composition](/documentation/features/prompt-management/manage-prompts#prompt-composition) for setup details.
+
+<CodeGroup>
+```python Python
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[],
+    extra_body={
+        "prompt": {
+            "prompt_id": "PARENT_PROMPT_ID",
+            "override": True,
+            "variables": {
+                "request": "dispute a charge from last month",
+                "conversation": {
+                    "_type": "prompt",
+                    "prompt_id": "CHILD_PROMPT_ID",
+                    "version": 2,
+                    "variables": {
+                        "customer_name": "Sarah",
+                        "department": "billing"
+                    }
+                }
+            }
+        }
+    },
+)
+```
+
+```typescript TypeScript
+const response = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [],
+    // @ts-expect-error - Respan parameters
+    prompt: {
+        prompt_id: "PARENT_PROMPT_ID",
+        override: true,
+        variables: {
+            request: "dispute a charge from last month",
+            conversation: {
+                _type: "prompt",
+                prompt_id: "CHILD_PROMPT_ID",
+                version: 2,
+                variables: {
+                    customer_name: "Sarah",
+                    department: "billing",
+                },
+            },
+        },
+    },
 });
 ```
 </CodeGroup>

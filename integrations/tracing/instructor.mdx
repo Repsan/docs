@@ -1,78 +1,74 @@
 ---
 title: "Instructor"
-description: "Learn how to integrate Respan tracing with Instructor to monitor and analyze your structured LLM outputs. Step-by-step guide for setting up tracing with async Instructor workflows."
+description: "Trace your Instructor structured LLM outputs with Respan for monitoring and debugging."
 ---
 
-[Instructor](https://python.useinstructor.com/) makes it easy to get structured data like JSON from LLMs. Use Instructor with Respan tracing to monitor your structured LLM outputs.
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
 
-## Start with the pre-built example
+## What is Instructor?
 
-We have built a pre-built example for you to get started quickly. You can find the example in [Github](https://github.com/Repsan/respan-example-projects/tree/main/example_scripts/python/instructor).
+[Instructor](https://python.useinstructor.com/) is a Python library that makes it easy to get structured data like JSON from LLMs using Pydantic models. Use Instructor with Respan tracing to monitor your structured LLM outputs.
 
-## Quick Start
+- [Example repo](https://github.com/Repsan/respan-example-projects/tree/main/example_scripts/python/instructor)
+
+## Setup
 
 <Steps>
-<Step title="Install dependencies">
+<Step title="Install packages">
+
 ```bash
 pip install instructor openai respan-tracing python-dotenv
 ```
+
 </Step>
 
-<Step title="Set up environment variables">
-Create a `.env` file in your project root:
+<Step title="Set environment variables">
 
 ```bash .env
-OPENAI_API_KEY=your_openai_api_key_here
-RESPAN_API_KEY=your_respan_api_key_here
+OPENAI_API_KEY=your-openai-api-key
+RESPAN_API_KEY=your-respan-api-key
 ```
+
 </Step>
 
-<Step title="Initialize Respan tracing">
-```python Python
+<Step title="Initialize Respan tracing and run a structured extraction">
+
+```python
+import asyncio
 import os
+from pydantic import BaseModel, Field
+import instructor
+from openai import AsyncOpenAI
 from respan_tracing import RespanTelemetry, Instruments
+from respan_tracing.decorators import task
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Initialize Respan tracing (one line!)
+# Initialize Respan tracing
 k_tl = RespanTelemetry(
-    app_name="instructor-demo", 
+    app_name="instructor-demo",
     instruments={Instruments.OPENAI}
 )
-```
-</Step>
 
-<Step title="Set up your Instructor client">
-```python Python
-import instructor
-from openai import AsyncOpenAI
-
-# Set up your async Instructor client
+# Set up Instructor client
 async_client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 instructor_client = instructor.from_openai(async_client)
-```
-</Step>
 
-<Step title="Define your Pydantic models">
-```python Python
-from pydantic import BaseModel, Field
-
+# Define your model
 class User(BaseModel):
     name: str = Field(description="Full name")
     age: int = Field(description="Age in years")
     email: str = Field(description="Email address")
     role: str = Field(description="Job title")
-```
-</Step>
 
-<Step title="Add @task decorator to your functions">
-```python Python
-from respan_tracing.decorators import task
-
+# Decorate your function
 @task(name="extract_user_async")
 async def extract_user(text: str) -> User:
-    """Extract user information using async Instructor."""
     return await instructor_client.chat.completions.create(
         model="gpt-4o-mini",
         response_model=User,
@@ -82,101 +78,35 @@ async def extract_user(text: str) -> User:
         ],
         temperature=0.1
     )
-```
-</Step>
-
-<Step title="Run your workflow">
-```python Python
-import asyncio
 
 async def main():
-    """Demo the async extraction with tracing."""
-    
-    # Sample text
     user_text = """
     Meet Alex Johnson, a 32-year-old Senior Software Engineer at Google.
     You can reach Alex at alex.johnson@google.com for any technical questions.
     """
-    
-    # Extract user (automatically traced!)
     user = await extract_user(user_text)
-    
     print(user.model_dump())
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+</Step>
+
+<Step title="View your trace">
+
+Open the [Traces page](https://platform.respan.ai/platform/traces) in the Respan dashboard.
+
 </Step>
 </Steps>
 
-## Complete Example
+## Observability
 
-Here's a complete example that demonstrates async Instructor with Respan tracing:
+With this integration, Respan auto-captures:
 
-```python Python
-"""
-Simple Async Instructor + Respan Tracing Example
+- **Instructor calls** -- each `@task`-decorated function as a span
+- **LLM calls** -- model, input/output messages, token usage (auto-captured via `Instruments.OPENAI`)
+- **Structured outputs** -- the Pydantic model returned by Instructor
+- **Errors** -- failed extractions and error details
 
-This example shows how easy it is to add Respan tracing to your async Instructor workflows.
-Just 3 lines of setup, then your structured outputs are automatically traced!
-"""
-
-import asyncio
-import os
-from pydantic import BaseModel, Field
-import instructor
-from openai import AsyncOpenAI
-from respan_tracing import RespanTelemetry, Instruments
-from respan_tracing.decorators import task
-from dotenv import load_dotenv
-
-load_dotenv()
-
-# 1️⃣ Initialize Respan tracing (one line!)
-k_tl = RespanTelemetry(
-    app_name="async-instructor-demo", 
-    instruments={Instruments.OPENAI}
-)
-
-# 2️⃣ Set up your async Instructor client (your existing code)
-async_client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-instructor_client = instructor.from_openai(async_client)
-
-# 3️⃣ Define your Pydantic models (your existing code)
-class User(BaseModel):
-    name: str = Field(description="Full name")
-    age: int = Field(description="Age in years")
-    email: str = Field(description="Email address")
-    role: str = Field(description="Job title")
-
-# 4️⃣ Add @task decorator to your functions (one line per function!)
-@task(name="extract_user_async")
-async def extract_user(text: str) -> User:
-    """Extract user information using async Instructor."""
-    return await instructor_client.chat.completions.create(
-        model="gpt-4o-mini",
-        response_model=User,
-        messages=[
-            {"role": "system", "content": "Extract user information from the text."},
-            {"role": "user", "content": text}
-        ],
-        temperature=0.1
-    )
-
-async def main():
-    """Demo the async extraction with tracing."""
-    
-    # Sample text
-    user_text = """
-    Meet Alex Johnson, a 32-year-old Senior Software Engineer at Google.
-    You can reach Alex at alex.johnson@google.com for any technical questions.
-    """
-    
-    # Extract user (automatically traced!)
-    user = await extract_user(user_text)
-    
-    print(user.model_dump())
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
+View traces on the [Traces page](https://platform.respan.ai/platform/traces).

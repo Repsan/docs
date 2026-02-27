@@ -1,65 +1,54 @@
 ---
-title: Agno
-description: "Send Agno traces to Keywords AI with OpenTelemetry instrumentation."
+title: "Agno"
+description: "Send Agno agent traces to Respan with OpenTelemetry instrumentation."
 ---
 
-<Note>
-Make sure you have an OpenTelemetry `TracerProvider` with a `SpanProcessor` configured before running your agent (otherwise spans will not be exported).
-</Note>
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
 
-## Overview
+## What is Agno?
 
-Use the Keywords AI [Agno](https://www.agno.com/) exporter to capture Agno spans (via OpenInference + OpenTelemetry) and send them to Keywords AI tracing.
+[Agno](https://www.agno.com/) is a Python framework for building AI agents with built-in OpenInference instrumentation. Use the Respan Agno exporter to capture Agno spans (via OpenInference + OpenTelemetry) and send them to Respan tracing.
+
+<Note>Make sure you have an OpenTelemetry `TracerProvider` with a `SpanProcessor` configured before running your agent (otherwise spans will not be exported).</Note>
 
 <Frame className="rounded-md">
   <img
     src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/Agno/How+Agno+Integration+Working.png"
-    alt="How Keywords AI Agno integration works"
+    alt="How Respan Agno integration works"
   />
 </Frame>
 
-## Quickstart
+## Setup
 
-### Step 1: Get a Keywords AI API key
+<Steps>
+<Step title="Install packages">
 
-Create an API key in the [Keywords AI dashboard](https://platform.keywordsai.co/platform/api/api-keys).
-
-### Step 2: Install packages
-
-<CodeGroup>
-```bash Python
-pip install agno openinference-instrumentation-agno keywordsai-exporter-agno
+```bash
+pip install agno openinference-instrumentation-agno respan-exporter-agno
 ```
-</CodeGroup>
 
-### Step 3: Set environment variables
+</Step>
 
-Create a `.env` or export environment variables:
+<Step title="Set environment variables">
 
 ```bash .env
-# Required
-KEYWORDSAI_API_KEY=your-keywordsai-api-key
+RESPAN_API_KEY=your-respan-api-key
+RESPAN_BASE_URL=https://api.respan.ai/api
 
-# Optional (gateway calls)
-KEYWORDSAI_GATEWAY_BASE_URL=https://api.keywordsai.co/api
-
-# If you want to call OpenAI directly (without the Keywords AI gateway), you also need:
+# If calling OpenAI directly (without Respan gateway):
 OPENAI_API_KEY=your-openai-api-key
-OPENAI_MODEL=gpt-4o-mini
 ```
 
-### Step 4: Instrument + run an agent
+</Step>
 
-This quickstart:
-- configures an OpenTelemetry `TracerProvider` and a `SpanProcessor` (required to export spans)
-- instruments Agno spans (OpenInference)
-- exports Agno spans to Keywords AI tracing ingest
-- routes LLM calls through the Keywords AI gateway
+<Step title="Instrument and run an agent">
 
-<CodeGroup>
-```python Python
+```python
 import os
-
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 from openinference.instrumentation.agno import AgnoInstrumentor
@@ -67,30 +56,23 @@ from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace as trace_sdk
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
-
-from keywordsai_exporter_agno import KeywordsAIAgnoInstrumentor
+from respan_exporter_agno import RespanAgnoInstrumentor
 
 def main():
-    keywordsai_api_key = os.getenv("KEYWORDSAI_API_KEY")
-    if not keywordsai_api_key:
-        raise RuntimeError("KEYWORDSAI_API_KEY not set")
+    respan_api_key = os.getenv("RESPAN_API_KEY")
+    base_url = os.getenv("RESPAN_BASE_URL", "https://api.respan.ai/api")
 
-    # Keywords AI gateway base URL
-    gateway_base_url = os.getenv("KEYWORDSAI_GATEWAY_BASE_URL", "https://api.keywordsai.co/api")
-
-    # Ensure we have a TracerProvider and a SpanProcessor
+    # Set up TracerProvider
     tracer_provider = trace_api.get_tracer_provider()
     if not isinstance(tracer_provider, trace_sdk.TracerProvider):
         tracer_provider = trace_sdk.TracerProvider()
         trace_api.set_tracer_provider(tracer_provider)
-
-    # Keep it silent locally (no console exporter). Traces are still sent to Keywords AI.
     tracer_provider.add_span_processor(SimpleSpanProcessor(InMemorySpanExporter()))
 
-    # Export Agno spans to Keywords AI
-    KeywordsAIAgnoInstrumentor().instrument(
-        api_key=keywordsai_api_key,
-        base_url=gateway_base_url,
+    # Export Agno spans to Respan
+    RespanAgnoInstrumentor().instrument(
+        api_key=respan_api_key,
+        base_url=base_url,
         passthrough=False,
     )
 
@@ -98,57 +80,43 @@ def main():
     AgnoInstrumentor().instrument()
 
     agent = Agent(
-        name="KeywordsAI Agno Quickstart Agent",
+        name="Respan Agno Quickstart Agent",
         model=OpenAIChat(
             id=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-            api_key=keywordsai_api_key,
-            base_url=gateway_base_url,
+            api_key=respan_api_key,
+            base_url=base_url,
         ),
     )
 
-    # Optional: Call OpenAI directly (no Keywords AI gateway)
-    # agent = Agent(
-    #     name="Agno Agent (direct OpenAI)",
-    #     model=OpenAIChat(
-    #         id=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-    #         api_key=os.getenv("OPENAI_API_KEY"),
-    #     ),
-    # )
-
-    agent.run("hello from KeywordsAI Agno exporter quickstart")
+    agent.run("hello from Respan Agno exporter quickstart")
     tracer_provider.force_flush()
-
 
 if __name__ == "__main__":
     main()
 ```
-</CodeGroup>
+
+</Step>
+
+<Step title="View your trace">
+
+Open the [Traces page](https://platform.respan.ai/platform/traces) in the Respan dashboard.
 
 <Frame className="rounded-md">
   <img
     src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/Agno/Agno+quickstart.png"
-    alt="Agno quickstart tracing in Keywords AI"
+    alt="Agno quickstart tracing in Respan"
   />
 </Frame>
 
-## Call OpenAI directly (optional)
+</Step>
+</Steps>
 
-If you want to **keep tracing to Keywords AI** but **call OpenAI directly** (instead of routing LLM calls through the Keywords AI gateway), use your provider key on the model:
+## Observability
 
-<CodeGroup>
-```python Python
-import os
-from agno.agent import Agent
-from agno.models.openai import OpenAIChat
+With this integration, Respan auto-captures:
 
-agent = Agent(
-    name="Direct OpenAI Agent",
-    model=OpenAIChat(
-        id=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        api_key=os.getenv("OPENAI_API_KEY"),
-    ),
-)
+- **Agent runs** -- each agent execution as a span
+- **LLM calls** -- model, input/output messages, token usage
+- **Errors** -- failed runs and error details
 
-agent.run("hello from Agno using OpenAI directly")
-```
-</CodeGroup>
+View traces on the [Traces page](https://platform.respan.ai/platform/traces).

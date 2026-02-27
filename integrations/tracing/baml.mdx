@@ -1,25 +1,35 @@
 ---
-title: BAML Tracing
-description: Use BAML with Respan tracing
-og:title: 'BAML with Respan'
+title: "BAML"
+description: "Trace and route your BAML structured outputs with Respan."
 ---
 
-This tutorial shows how to set up Respan tracing with [BAML](https://www.boundaryml.com/) to automatically track LLM usage from your BAML client and view detailed spans in the Respan platform.
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
+
+## What is BAML?
+
+[BAML](https://www.boundaryml.com/) is a domain-specific language for building reliable LLM functions with structured outputs. This guide shows how to set up Respan with BAML for both tracing and gateway routing.
 
 <Note>Import the instrumentation module before any other module imports <code>baml_client.b</code> to ensure all functions are decorated.</Note>
 
 ## Setup
 
-### 1) Environment Variables
-Create a `.env` or environment variables in your runtime and set:
+<Steps>
+<Step title="Set environment variables">
 
 ```bash .env
 RESPAN_API_KEY=your-respan-api-key
 RESPAN_BASE_URL=https://api.respan.ai
 ```
 
-### 2) Create the Respan BAML instrumentation module
-Create a module (for example `respan_baml_tracing.py`) that decorates all callable BAML client functions. Import this module first in your app so every BAML call is traced.
+</Step>
+
+<Step title="Create the instrumentation module">
+
+Create a module (e.g. `respan_baml_tracing.py`) that decorates all callable BAML client functions. Import this module first in your app so every BAML call is traced.
 
 ```python respan_baml_tracing.py
 from collections.abc import Callable
@@ -96,17 +106,134 @@ _decorated_count, _found_count = initialize_respan_baml_tracing()
 __all__ = ["b"]
 ```
 
-### 3) Use the decorated BAML client
+</Step>
+
+<Step title="Use the decorated BAML client">
+
 Import the decorated `b` from your instrumentation module and use it like your normal BAML client:
 
 ```python app.py
 from respan_baml_tracing import b
 
 async def main():
-    # Call any BAML client function; usage will be traced automatically
     result = await b.some_function(arg1="value")
     print(result)
 ```
 
+</Step>
+
+<Step title="View your trace">
+
+Open the [Traces page](https://platform.respan.ai/platform/traces) in the Respan dashboard.
+
+</Step>
+</Steps>
+
+## Attributes
+
+Attach Respan-specific parameters to your traces via `respan_params` in the tracing decorator or via `X-Data-Respan-Params` header when using the gateway.
+
+### Via tracing SDK
+
+```python
+kai_client.update_current_span(
+    respan_params={
+        "customer_identifier": "user_123",
+        "metadata": {"session_id": "abc123"},
+    },
+)
+```
+
+### Via gateway header
+
+```python
+import base64, json
+
+respan_params = {
+    "customer_identifier": "user_123",
+    "thread_id": "conversation_456",
+    "metadata": {"session_id": "abc123"},
+}
+encoded = base64.b64encode(json.dumps(respan_params).encode("utf-8")).decode("utf-8")
+
+# Pass as header: {"X-Data-Respan-Params": encoded}
+```
+
+| Attribute | Description |
+|---|---|
+| `customer_identifier` | Customer or user identifier |
+| `thread_id` | Thread or conversation identifier |
+| `metadata` | Custom key-value pairs attached to the trace |
+
+## Gateway
+
+Route BAML LLM calls through the Respan gateway for automatic logging and observability.
+
+### Using a BAML client registry
+
+Set up a client registry that points at the Respan gateway and pass Respan parameters via headers:
+
+```python
+from baml_client.sync_client import b
+from baml_client.types import Resume
+from baml_py import ClientRegistry
+import base64
+import json
+import os
+
+def extract_resume_with_respan(raw_resume: str) -> Resume:
+    cr = ClientRegistry()
+
+    respan_params = {
+        "customer_identifier": "123",
+    }
+    respan_params_encoded = base64.b64encode(
+        json.dumps(respan_params).encode("utf-8")
+    ).decode("utf-8")
+
+    cr.add_llm_client(
+        name="RespanClient",
+        provider="openai",
+        options={
+            "model": "gpt-4o",
+            "api_key": os.getenv("RESPAN_API_KEY"),
+            "base_url": "https://api.respan.ai/api",
+            "headers": {"X-Data-Respan-Params": respan_params_encoded},
+        },
+    )
+    cr.set_primary("RespanClient")
+
+    response = b.ExtractResume(
+        raw_resume,
+        baml_options={"client_registry": cr},
+    )
+    return response
+```
+
+### Using a BAML config file
+
+Define a Respan client directly in your `.baml` config:
+
+```json
+client<llm> Respan {
+  provider openai
+  options {
+    model gpt-4o
+    api_key env.RESPAN_API_KEY
+    base_url "https://api.respan.ai/api"
+  }
+}
+```
+
+Then reference `client "RespanClient"` in your BAML function definitions.
+
 ## Observability
-Once configured, you can view your traces and analytics in the Respan platform under Signals → Traces.
+
+With this integration, Respan auto-captures:
+
+- **BAML function calls** -- each decorated function as a span
+- **LLM calls** -- model, token usage (input/output/total)
+- **Gateway routing** -- requests routed through Respan gateway
+- **Errors** -- failed calls and error details
+
+View traces on the [Traces page](https://platform.respan.ai/platform/traces).

@@ -3,37 +3,56 @@ title: "Respan"
 description: "Trace your LLM workflows using the Respan tracing SDK."
 ---
 
-## Overview
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
 
-The Respan tracing SDK uses OpenTelemetry under the hood. Add the `respan_tracing` package to your project and annotate your workflows with `@workflow` and `@task` decorators to get full trace visibility.
+## What is Respan Tracing?
+
+The [Respan tracing SDK](https://pypi.org/project/respan-tracing/) uses OpenTelemetry under the hood. Add the `respan_tracing` package to your project and annotate your workflows with `@workflow` and `@task` decorators to get full trace visibility.
 
 ## Setup
 
-<Tabs>
-<Tab title="Python">
-
 <Steps>
 <Step title="Install the SDK">
+
+<CodeGroup>
+```bash Python
+pip install respan-tracing
+```
+```bash JavaScript
+npm install @respan/tracing
+```
+</CodeGroup>
+
 <Note>
 **Python Requirement**: This package requires **Python 3.9** or later.
 </Note>
-```bash pip
-pip install respan-tracing
-```
+
 </Step>
 
-<Step title="Set up Environment Variables">
-Get your API key from the [API Keys page](https://platform.respan.ai/platform/api/api-keys) in Settings, then configure it in your environment:
+<Step title="Set environment variables">
 
-```python .env
+<CodeGroup>
+```bash Python
 RESPAN_BASE_URL="https://api.respan.ai/api"
 RESPAN_API_KEY="YOUR_RESPAN_API_KEY"
 ```
+```bash JavaScript
+RESPAN_BASE_URL="https://api.respan.ai/api"
+RESPAN_API_KEY="YOUR_RESPAN_API_KEY"
+OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+```
+</CodeGroup>
+
 </Step>
 
-<Step title="A full example with LLM calls">
-Use the `@workflow` and `@task` decorators to instrument your code:
-```python Python {8}
+<Step title="Initialize and run a workflow">
+
+<CodeGroup>
+```python Python
 import os
 from openai import OpenAI
 from respan_tracing.decorators import workflow, task
@@ -65,33 +84,7 @@ if __name__ == "__main__":
     result = joke_workflow()
     print(result)
 ```
-</Step>
-
-</Steps>
-</Tab>
-
-<Tab title="JS/TS">
-<Steps>
-<Step title="Install the SDK">
-Install the package using your preferred package manager:
-```bash
-npm install @respan/tracing
-# or yarn
-
-yarn add @respan/tracing
-```
-</Step>
-<Step title="Set up Environment Variables">
-Get your API key from the [API Keys page](https://platform.respan.ai/platform/api/api-keys) in Settings, then configure it in your environment:
-
-```bash .env
-RESPAN_BASE_URL="https://api.respan.ai/api"
-RESPAN_API_KEY="YOUR_RESPAN_API_KEY"
-OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
-```
-</Step>
-<Step title="Create a simple workflow">
-```typescript server.ts {1-2, 5-9, 13-14, 16-17, 25-28}
+```typescript JavaScript
 import { RespanTelemetry } from '@respan/tracing';
 import OpenAI from 'openai';
 
@@ -130,7 +123,6 @@ async function simpleJokeWorkflow() {
     );
 }
 
-// Run the workflow
 async function main() {
     const result = await simpleJokeWorkflow();
     console.log(result);
@@ -138,30 +130,37 @@ async function main() {
 
 main().catch(console.error);
 ```
+</CodeGroup>
+
 </Step>
 
-</Steps>
-</Tab>
+<Step title="View your trace">
 
-</Tabs>
+Open the [Traces page](https://platform.respan.ai/platform/traces) in the Respan dashboard.
+
+<Frame className="rounded-md">
+<img width="100%" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/documentation/get-started/overview/trace_tree_v1.png" alt="Agent tracing visualization" />
+</Frame>
+
+</Step>
+</Steps>
 
 <Note>
-Optional HTTP instrumentation
-If you see logs like:
-<Code>
-ERROR:root:Failed to initialize Requests instrumentation
-ERROR:root:Failed to initialize urllib3 instrumentation
-</Code>
-install the OpenTelemetry instrumentations to enable and silence these messages:
+Optional HTTP instrumentation: if you see logs like `Failed to initialize Requests instrumentation`, install the OpenTelemetry instrumentations:
 ```bash
 pip install opentelemetry-instrumentation-requests opentelemetry-instrumentation-urllib3
 ```
 This is optional; tracing works without them. Add only if your app uses `requests` or `urllib3`.
 </Note>
 
-## View your traces
+## Observability
 
-You can now see your traces in the [Traces](https://platform.respan.ai/platform/traces) page.
-<Frame className="rounded-md">
-<img width="100%" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/documentation/get-started/overview/trace_tree_v1.png" alt="Agent tracing visualization" />
-</Frame>
+With this integration, Respan auto-captures:
+
+- **Workflows** -- each `@workflow`-decorated function as a root trace
+- **Tasks** -- each `@task`-decorated function as a span
+- **LLM calls** -- model, input/output messages, token usage
+- **Performance metrics** -- latency per step
+- **Errors** -- failed tasks and error details
+
+View traces on the [Traces page](https://platform.respan.ai/platform/traces).

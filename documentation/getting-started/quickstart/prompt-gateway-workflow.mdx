@@ -4,13 +4,20 @@ description: "Manage prompts and route traffic through the AI gateway"
 icon: "wand-magic-sparkles"
 ---
 
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
+
+
 ## Prompt management
 
 Instead of hardcoding prompts in your codebase, manage them on Respan. Every prompt has full version history: edit the text, model, temperature, or any configuration, commit a new version, and deploy it to production without touching your code. See the [prompt quickstart](/documentation/getting-started/quickstart/prompt_management) for a hands-on walkthrough.
 
 - **[Manage prompts](/documentation/features/prompt-management/manage-prompts)**: create prompt templates, commit new versions, and compare changes across versions.
 - **[Variables](/documentation/features/prompt-management/manage-prompts#variables)**: use `{{variable_name}}` to add dynamic content to your prompts. Variables let you reuse the same template across different inputs, and they map directly to testset columns when running experiments.
-- **[Use prompt in code](/documentation/features/prompt-management/use-prompt)**: reference your prompt by ID in code. When you deploy a new version on the platform, your application picks it up immediately with no code changes.
+- **[Use prompt in code](/documentation/features/prompt-management/manage-prompts#deployment--versioning)**: reference your prompt by ID in code. When you deploy a new version on the platform, your application picks it up immediately with no code changes.
 
 ---
 

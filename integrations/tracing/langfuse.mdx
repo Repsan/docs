@@ -1,35 +1,32 @@
 ---
-title: Langfuse
+title: "Langfuse"
 description: "Send Langfuse traces to Respan with OTEL instrumentation."
 ---
 
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
+
+## What is Langfuse?
+
+[Langfuse](https://langfuse.com/) is an open-source LLM observability platform. Use the Respan Langfuse instrumentor to redirect Langfuse traces to Respan without changing your Langfuse usage. You can keep using `@observe` and the Langfuse SDK as usual.
+
 <Note>Instrument before importing Langfuse so the HTTP client is patched.</Note>
 
-## Overview
+## Setup
 
-Use the Respan [Langfuse](https://langfuse.com/) instrumentor to redirect Langfuse traces to Respan without changing your Langfuse usage. You can keep using `@observe` and the Langfuse SDK as usual.
+<Steps>
+<Step title="Install packages">
 
-## Quickstart
-
-### Step 1: Get a Respan API key
-
-Create an API key in the [Respan dashboard](https://platform.respan.ai/platform/api/api-keys).
-
-<Frame className="rounded-md">
-<img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/documentation/admin/kai_create_api_key_v0.png" alt="Create a Respan API key" />
-</Frame>
-
-### Step 2: Install packages
-
-<CodeGroup>
-```bash Python
+```bash
 pip install langfuse respan-instrumentation-langfuse
 ```
-</CodeGroup>
 
-### Step 3: Set environment variables
+</Step>
 
-Create a `.env` or export environment variables:
+<Step title="Set environment variables">
 
 ```bash .env
 RESPAN_API_KEY=your-respan-api-key
@@ -40,16 +37,11 @@ LANGFUSE_SECRET_KEY=your-langfuse-secret-key
 LANGFUSE_HOST=https://cloud.langfuse.com
 ```
 
-## Examples
+</Step>
 
-Below are three common Langfuse patterns using the Respan instrumentor.
+<Step title="Instrument and run">
 
-#### Basic decorator
-
-Instrument the Langfuse client and use `@observe`.
-
-<CodeGroup>
-```python Python
+```python
 import dotenv
 dotenv.load_dotenv(".env", override=True)
 
@@ -80,34 +72,36 @@ print(result)
 
 langfuse.flush()
 ```
-</CodeGroup>
+
+</Step>
+
+<Step title="View your trace">
+
+Open the [Traces page](https://platform.respan.ai/platform/traces) in the Respan dashboard.
 
 <Frame className="rounded-md">
 <img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/Langfuse/basic_decorator.png" alt="Langfuse basic decorator tracing in Respan" />
 </Frame>
 
-#### Generation tracing
+</Step>
+</Steps>
+
+## Examples
+
+### Generation tracing
 
 Mark a function as a generation with `@observe(as_type="generation")`.
 
-<CodeGroup>
-```python Python
+```python
 import os
 from respan_instrumentation_langfuse import LangfuseInstrumentor
 
-os.environ["RESPAN_API_KEY"] = "your-api-key"
-
 instrumentor = LangfuseInstrumentor()
-instrumentor.instrument(
-    api_key=os.environ["RESPAN_API_KEY"],
-)
+instrumentor.instrument(api_key=os.environ["RESPAN_API_KEY"])
 
 from langfuse import Langfuse, observe
 
-langfuse = Langfuse(
-    public_key="pk-lf-...",
-    secret_key="sk-lf-...",
-)
+langfuse = Langfuse(public_key="pk-lf-...", secret_key="sk-lf-...")
 
 @observe(as_type="generation")
 def generate_response(prompt: str):
@@ -115,37 +109,27 @@ def generate_response(prompt: str):
 
 result = generate_response("Write a poem")
 print(result)
-
 langfuse.flush()
 ```
-</CodeGroup>
 
 <Frame className="rounded-md">
 <img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/Langfuse/generation-tracing.png" alt="Langfuse generation tracing in Respan" />
 </Frame>
 
-#### Nested traces
+### Nested traces
 
 Create parent-child relationships with nested `@observe` functions.
 
-<CodeGroup>
-```python Python
+```python
 import os
 from respan_instrumentation_langfuse import LangfuseInstrumentor
 
-os.environ["RESPAN_API_KEY"] = "your-api-key"
-
 instrumentor = LangfuseInstrumentor()
-instrumentor.instrument(
-    api_key=os.environ["RESPAN_API_KEY"],
-)
+instrumentor.instrument(api_key=os.environ["RESPAN_API_KEY"])
 
 from langfuse import Langfuse, observe
 
-langfuse = Langfuse(
-    public_key="pk-lf-...",
-    secret_key="sk-lf-...",
-)
+langfuse = Langfuse(public_key="pk-lf-...", secret_key="sk-lf-...")
 
 @observe()
 def subtask(name: str):
@@ -159,11 +143,20 @@ def main_workflow(task: str):
 
 result = main_workflow("Process request")
 print(result)
-
 langfuse.flush()
 ```
-</CodeGroup>
 
 <Frame className="rounded-md">
 <img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/Langfuse/nested_traces.png" alt="Langfuse nested traces in Respan" />
 </Frame>
+
+## Observability
+
+With this integration, Respan auto-captures:
+
+- **Langfuse traces** -- every `@observe`-decorated function as a span
+- **Generations** -- LLM calls marked with `as_type="generation"`
+- **Nested spans** -- parent-child relationships
+- **Errors** -- failed calls and error details
+
+View traces on the [Traces page](https://platform.respan.ai/platform/traces).

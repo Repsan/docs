@@ -1,40 +1,46 @@
 ---
-title: Haystack Tracing
-description: "Monitor and trace your Haystack pipelines with Respan for complete workflow visibility"
+title: "Haystack"
+description: "Trace and route your Haystack pipelines with Respan for complete workflow visibility."
 ---
 
-<Note> This integration is for **workflow tracing**. For gateway features, see [Haystack Gateway](/integrations/gateway/haystack). </Note>
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
 
-## Overview
+## What is Haystack?
 
-[Haystack](https://haystack.deepset.ai/) pipelines can have multiple components (retrievers, prompt builders, LLMs). The Respan tracing integration captures your entire workflow execution, showing you exactly how data flows through each component.
+[Haystack](https://haystack.deepset.ai/) is a Python framework for building production-ready LLM pipelines with multiple components (retrievers, prompt builders, LLMs). The Respan integration captures your entire workflow execution and can route LLM calls through the Respan gateway.
 
 <Frame className="rounded-md">
 <img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/haystack/haystack_tracing.png" alt="Haystack tracing visualization" />
 </Frame>
 
-## Installation
+## Setup
+
+<Steps>
+<Step title="Install packages">
 
 ```bash
 pip install respan-exporter-haystack
 ```
 
-## Quickstart
+</Step>
 
-<Steps>
-<Step title="Set Environment Variables">
+<Step title="Set environment variables">
 
-```bash
-export RESPAN_API_KEY="your-respan-api-key"
-export OPENAI_API_KEY="your-openai-key"
-export HAYSTACK_CONTENT_TRACING_ENABLED="true"
+```bash .env
+RESPAN_API_KEY=your-respan-api-key
+OPENAI_API_KEY=your-openai-key
+HAYSTACK_CONTENT_TRACING_ENABLED=true
 ```
 
 The `HAYSTACK_CONTENT_TRACING_ENABLED` variable activates Haystack's tracing system.
 
 </Step>
 
-<Step title="Add RespanConnector to Your Pipeline">
+<Step title="Add RespanConnector to your pipeline">
 
 ```python
 import os
@@ -45,14 +51,12 @@ from respan_exporter_haystack import RespanConnector
 
 os.environ["HAYSTACK_CONTENT_TRACING_ENABLED"] = "true"
 
-# Create pipeline with tracing
 pipeline = Pipeline()
 pipeline.add_component("tracer", RespanConnector("My Workflow"))
 pipeline.add_component("prompt", PromptBuilder(template="Tell me about {{topic}}."))
 pipeline.add_component("llm", OpenAIGenerator(model="gpt-4o-mini"))
 pipeline.connect("prompt", "llm")
 
-# Run
 result = pipeline.run({"prompt": {"topic": "artificial intelligence"}})
 print(result["llm"]["replies"][0])
 print(f"\nTrace URL: {result['tracer']['trace_url']}")
@@ -60,23 +64,102 @@ print(f"\nTrace URL: {result['tracer']['trace_url']}")
 
 </Step>
 
-<Step title="View Your Trace">
+<Step title="View your trace">
 
-After running, you'll get a trace URL. Visit it to see:
-- Pipeline execution timeline
-- Each component's input/output
-- Timing per component
-- Token usage and costs
+After running, you'll get a trace URL. Visit it to see the pipeline execution timeline, each component's input/output, timing, and token usage.
 
 Dashboard: [platform.respan.ai/platform/traces](https://platform.respan.ai/platform/traces)
 
 </Step>
 </Steps>
 
-## Gateway Integration
+## Gateway
 
-For production workflows, combine tracing with gateway features like automatic logging, fallbacks, and cost optimization.
+Route LLM calls through the Respan gateway for automatic logging, fallbacks, and cost optimization. Replace `OpenAIGenerator` with `RespanGenerator`.
 
-<Card title="Haystack Gateway Integration" href="/integrations/gateway/haystack" icon="link">
-  Learn how to route LLM calls through Respan gateway
-</Card>
+<Frame className="rounded-md">
+<img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/haystack/haystack_gateway.png" alt="Haystack gateway integration" />
+</Frame>
+
+### Basic usage
+
+```python
+import os
+from haystack import Pipeline
+from haystack.components.builders import PromptBuilder
+from respan_exporter_haystack import RespanGenerator
+
+pipeline = Pipeline()
+pipeline.add_component("prompt", PromptBuilder(template="Tell me about {{topic}}."))
+pipeline.add_component("llm", RespanGenerator(
+    model="gpt-4o-mini",
+    api_key=os.getenv("RESPAN_API_KEY")
+))
+pipeline.connect("prompt", "llm")
+
+result = pipeline.run({"prompt": {"topic": "machine learning"}})
+print(result["llm"]["replies"][0])
+```
+
+## Attributes
+
+Pass Respan-specific parameters via `generation_kwargs` on `RespanGenerator`:
+
+```python
+from respan_exporter_haystack import RespanGenerator
+
+pipeline.add_component("llm", RespanGenerator(
+    model="gpt-4o-mini",
+    api_key=os.getenv("RESPAN_API_KEY"),
+    generation_kwargs={
+        "customer_identifier": "user_123",
+        "thread_identifier": "conversation_456",
+        "metadata": {"session_id": "abc123"},
+    }
+))
+```
+
+| Attribute | Description |
+|---|---|
+| `customer_identifier` | Customer or user identifier |
+| `thread_identifier` | Thread or conversation identifier |
+| `metadata` | Custom key-value pairs attached to the trace |
+| `fallback_models` | List of fallback models (gateway feature) |
+
+## Prompts
+
+Use platform-managed prompts for centralized control:
+
+```python
+import os
+from haystack import Pipeline
+from respan_exporter_haystack import RespanGenerator
+
+pipeline = Pipeline()
+pipeline.add_component("llm", RespanGenerator(
+    prompt_id="your-prompt-id",
+    api_key=os.getenv("RESPAN_API_KEY")
+))
+
+result = pipeline.run({
+    "llm": {
+        "prompt_variables": {
+            "user_input": "your text here"
+        }
+    }
+})
+```
+
+Create prompts at: [platform.respan.ai/platform/prompts](https://platform.respan.ai/platform/prompts)
+
+## Observability
+
+With this integration, Respan auto-captures:
+
+- **Pipeline execution** -- the full pipeline as a trace
+- **Component calls** -- each component's input/output as a span
+- **LLM calls** -- model, token usage, timing
+- **Gateway features** -- fallbacks, load balancing, cost tracking
+- **Errors** -- failed components and error details
+
+View traces on the [Traces page](https://platform.respan.ai/platform/traces).

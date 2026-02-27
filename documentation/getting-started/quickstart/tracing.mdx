@@ -1,64 +1,30 @@
 ---
 title: "Quickstart"
-description: "Three ways to start tracing your LLM workflows with Respan."
+description: "Get your first trace in Respan in 5 minutes."
 ---
 
-## What are traces?
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
 
-Traces are a chained collection of workflows and tasks. You can use tree views and waterfalls to better track dependencies and latency.
 
-<Frame className="rounded-md">
-<img width="100%" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/documentation/get-started/overview/trace_tree_v1.png" alt="Agent tracing visualization" />
-</Frame>
+## 1. Set up your account
 
-## Get your Respan API key
-
-After you create an account on [Respan](https://platform.respan.ai), you can get your API key from the [API keys page](https://platform.respan.ai/platform/api/api-keys).
-<Frame className="rounded-md">
-<img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/documentation/admin/kai_create_api_key_v0.png"/>
-</Frame>
+Sign up at [platform.respan.ai](https://platform.respan.ai) and create an API key on the [API keys page](https://platform.respan.ai/platform/api/api-keys).
 
 ---
 
-## Get started
+## 2. Set up tracing
+
+Pick the method that matches your stack.
 
 <Tabs>
 
-<Tab title="Using AI">
-
-The fastest way to get started. Add the Respan Docs MCP server to your AI coding tool — then just ask it to set up tracing for you.
-
-<CodeGroup>
-```json Cursor (~/.cursor/mcp.json)
-{
-  "mcpServers": {
-    "respan-docs": {
-      "url": "https://docs.respan.ai/mcp"
-    }
-  }
-}
-```
-```json Claude Desktop (macOS)
-// ~/Library/Application Support/Claude/claude_desktop_config.json
-{
-  "mcpServers": {
-    "respan-docs": {
-      "url": "https://docs.respan.ai/mcp"
-    }
-  }
-}
-```
-</CodeGroup>
-
-Then ask: *"Set up Respan tracing for my project"* — your AI tool will pull the relevant docs and write the integration code for you.
-
-See [Docs MCP](/documentation/features/mcp/docs-mcp) for more.
-
-</Tab>
-
 <Tab title="Respan tracing SDK">
 
-Use the Respan tracing SDK to instrument your code with `@workflow` and `@task` decorators. LLM calls are auto-captured.
+Add `@workflow` and `@task` decorators to your code. LLM calls are auto-captured.
 
 <CodeGroup>
 ```python Python
@@ -118,34 +84,175 @@ jokeWorkflow().then(console.log);
 ```
 </CodeGroup>
 
-Using a framework like OpenAI Agents SDK or Vercel AI SDK? See [Integration frameworks](/documentation/features/tracing/traces/integration-frameworks) for pre-built integrations.
-
-For advanced SDK features (class-based workflows, override span I/O), see [Tracing SDK](/documentation/features/tracing/traces/tracing-sdk).
+For advanced features (class-based workflows, override span I/O), see [Tracing SDK](/documentation/features/tracing/traces/tracing-sdk).
 
 </Tab>
 
-<Tab title="Integrations">
+<Tab title="OpenAI Agents SDK">
 
-Already using a specific framework? These lightweight, pre-built integrations auto-capture traces with minimal setup — just install the exporter and connect.
+Set Respan as the trace processor for the OpenAI Agents SDK.
+
+<CodeGroup>
+```python Python
+# pip install respan-exporter-openai-agents
+import asyncio
+from agents import Agent, Runner
+from agents.tracing import set_trace_processors, trace
+from respan_exporter_openai_agents import RespanTraceProcessor
+
+set_trace_processors([
+    RespanTraceProcessor(
+        api_key=os.getenv("RESPAN_API_KEY"),
+        endpoint=os.getenv("RESPAN_OAIA_TRACING_ENDPOINT"),
+    ),
+])
+
+async def main():
+    agent = Agent(
+        name="Assistant",
+        instructions="You only respond in haikus.",
+    )
+    with trace("Hello world test"):
+        result = await Runner.run(agent, "Tell me about recursion in programming.")
+        print(result.final_output)
+
+asyncio.run(main())
+```
+```typescript JavaScript
+// npm install @respan/exporter-openai-agents
+import { Agent, BatchTraceProcessor, run, setTraceProcessors, withTrace } from '@openai/agents';
+import { RespanOpenAIAgentsTracingExporter } from '@respan/exporter-openai-agents';
+
+setTraceProcessors([
+  new BatchTraceProcessor(
+    new RespanOpenAIAgentsTracingExporter(),
+  ),
+]);
+
+async function main() {
+  const agent = new Agent({
+    name: 'Assistant',
+    instructions: 'You only respond in haikus.',
+  });
+
+  const result = await withTrace('Hello World', async () => {
+    return run(agent, 'Tell me about recursion in programming.');
+  });
+  console.log(result.finalOutput);
+}
+
+main().catch(console.error);
+```
+</CodeGroup>
+
+For the full setup guide, see [OpenAI Agents SDK](/integrations/tracing/openai-agents-sdk).
+
+</Tab>
+
+<Tab title="Anthropic Agents SDK">
+
+Set Respan as the exporter for the Anthropic Agents SDK.
+
+<CodeGroup>
+```python Python
+# pip install respan-exporter-anthropic-agents
+import asyncio
+from claude_agent_sdk import ClaudeAgentOptions
+from respan_exporter_anthropic_agents.respan_anthropic_agents_exporter import (
+    RespanAnthropicAgentsExporter,
+)
+
+exporter = RespanAnthropicAgentsExporter()
+
+async def main():
+    options = exporter.with_options(
+        options=ClaudeAgentOptions(
+            allowed_tools=["Read", "Glob", "Grep"],
+            permission_mode="acceptEdits",
+        )
+    )
+    async for message in exporter.query(
+        prompt="Analyze this repository and summarize architecture.",
+        options=options,
+    ):
+        print(message)
+
+asyncio.run(main())
+```
+```typescript JavaScript
+// npm install @respan/exporter-anthropic-agents
+import { RespanAnthropicAgentsExporter } from "@respan/exporter-anthropic-agents";
+
+const exporter = new RespanAnthropicAgentsExporter();
+
+async function main() {
+  for await (const message of exporter.query({
+    prompt: "Review this repository and summarize architecture.",
+    options: {
+      allowedTools: ["Read", "Glob", "Grep"],
+      permissionMode: "acceptEdits",
+    },
+  })) {
+    console.log(message);
+  }
+}
+
+main().catch(console.error);
+```
+</CodeGroup>
+
+For the full setup guide, see [Anthropic Agents SDK](/integrations/tracing/anthropic-agents-sdk).
+
+</Tab>
+
+<Tab title="Vercel AI SDK">
+
+Register Respan as the OpenTelemetry exporter and enable telemetry in your AI calls.
+
+```typescript instrumentation.ts
+// npm install @respan/exporter-vercel
+import { registerOTel } from "@vercel/otel";
+import { RespanExporter } from "@respan/exporter-vercel";
+
+export function register() {
+  registerOTel({
+    serviceName: "next-app",
+    traceExporter: new RespanExporter({
+      apiKey: process.env.RESPAN_API_KEY,
+      baseUrl: process.env.RESPAN_BASE_URL,
+      debug: true,
+    }),
+  });
+}
+```
+
+```typescript app/api/chat/route.ts
+import { openai } from "@ai-sdk/openai";
+import { streamText } from "ai";
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: openai("gpt-4o"),
+    messages,
+    experimental_telemetry: { isEnabled: true },
+  });
+
+  return result.toDataStreamResponse();
+}
+```
+
+For the full setup guide, see [Vercel AI SDK](/integrations/tracing/vercel-tracing).
+
+</Tab>
+
+<Tab title="Others">
 
 <CardGroup cols={3}>
 
-<Card href="/integrations/tracing/openai-agents-sdk" className="bg-white">
-  <img className="block dark:hidden" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/integration_cards/openai_agent_v0.png" alt="OpenAI Agents SDK" style={{
-    pointerEvents: 'none',
-  }} />
-  <img className="hidden dark:block" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/integration_cards/openai_agent_v0_black.png" alt="OpenAI Agents SDK" style={{
-    pointerEvents: 'none',
-  }} />
-</Card>
-
-<Card href="/integrations/tracing/vercel-tracing">
-  <img className="block dark:hidden" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/integration_cards/vercel_v0.png" alt="Vercel AI SDK" style={{
-    pointerEvents: 'none'
-  }} />
-  <img className="hidden dark:block" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/integration_cards/vercel_v0_black.png" alt="Vercel AI SDK" style={{
-    pointerEvents: 'none'
-  }} />
+<Card href="/integrations/tracing/opentelemetry">
+  OpenTelemetry
 </Card>
 
 <Card href="/integrations/tracing/mastra">
@@ -162,15 +269,6 @@ Already using a specific framework? These lightweight, pre-built integrations au
     pointerEvents: 'none'
   }} />
   <img className="hidden dark:block" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/integration_cards/langgraph_v0_black.png" alt="LangGraph" style={{
-    pointerEvents: 'none'
-  }} />
-</Card>
-
-<Card href="/integrations/tracing/langfuse">
-  <img className="block dark:hidden" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/integration_cards/langfuse_v0.png" alt="Langfuse" style={{
-    pointerEvents: 'none'
-  }} />
-  <img className="hidden dark:block" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/Integrations/integration_cards/langfuse_v0_black.png" alt="Langfuse" style={{
     pointerEvents: 'none'
   }} />
 </Card>
@@ -202,65 +300,25 @@ Already using a specific framework? These lightweight, pre-built integrations au
   }} />
 </Card>
 
-<Card title="Respan Native" icon="code" href="/integrations/tracing/respan-native">
-  Python & TypeScript SDK with OpenTelemetry
-</Card>
-
 </CardGroup>
 
 </Tab>
 
-<Tab title="Manually">
-
-Send traces directly to Respan without an SDK. Choose between the OTLP endpoint (standard OpenTelemetry) or the JSON ingest API.
-
-**OTLP endpoint (recommended):**
-
-Point any OpenTelemetry SDK or collector at Respan's OTLP-compatible endpoint:
-
-```bash
-curl -X POST "https://api.respan.ai/api/v2/traces" \
-  -H "Authorization: Bearer $RESPAN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "resourceSpans": [{
-      "resource": {
-        "attributes": [{"key": "service.name", "value": {"stringValue": "my-service"}}]
-      },
-      "scopeSpans": [{
-        "scope": {"name": "manual"},
-        "spans": [{
-          "traceId": "0af7651916cd43dd8448eb211c80319c",
-          "spanId": "b7ad6b7169203332",
-          "name": "my-operation",
-          "startTimeUnixNano": "1700000000000000000",
-          "endTimeUnixNano": "1700000001000000000",
-          "status": {"code": 1},
-          "attributes": []
-        }]
-      }]
-    }]
-  }'
-```
-
-**JSON ingest API:**
-
-```bash
-curl -X POST "https://api.respan.ai/api/v1/traces/ingest" \
-  -H "Authorization: Bearer $RESPAN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '[{
-    "trace_unique_id": "a-trace-id",
-    "span_unique_id": "root-span-id",
-    "span_name": "workflow.start",
-    "span_parent_id": null,
-    "timestamp": "2025-09-08T07:46:14.007279Z",
-    "start_time": "2025-09-08T07:46:14.007279Z"
-  }]'
-```
-
-See [Manual ingestion](/documentation/features/tracing/traces/manual-ingestion) for full details.
-
-</Tab>
-
 </Tabs>
+
+---
+
+## 3. See your first trace
+
+Open the [Traces page](https://platform.respan.ai/platform/traces) in the Respan dashboard. You should see your trace appear within a few seconds.
+
+<Frame className="rounded-md">
+<img width="100%" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/documentation/get-started/overview/trace_tree_v1.png" alt="Agent tracing visualization" />
+</Frame>
+
+---
+
+## What's next
+
+- [Enrich your spans](/documentation/features/tracing/traces/span-parameters) with `customer_identifier`, `metadata`, and `thread_identifier`.
+- [Set up the gateway](/documentation/features/gateway/setup) to route LLM traffic through one API with fallbacks, retries, and caching.

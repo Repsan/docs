@@ -7,31 +7,39 @@ twitter:description: 'Respan is a full-stack LLM engineering platform for develo
 sidebarTitle: 'Overview'
 ---
 
-## What is Respan?
-Respan is a **full-stack LLM engineering platform** that helps developers and PMs build reliable AI products 10x faster. In a shared workspace, product teams can **trace**, **monitor**, **evaluate**, and **optimize** AI performance.
+## How Respan works
 
-## Features
+Everything in Respan is built on one core data structure: the **span**. Every LLM interaction, whether it comes from the tracing SDK, a framework integration, the AI gateway, or a direct API call, is stored as a span with its input, output, model, metrics, and metadata.
 
-### Observability
+Spans form hierarchies called [Traces](/documentation/getting-started/quickstart/tracing) (the execution tree of an agent workflow). They can also group into [Threads](/documentation/features/tracing/logs/log-parameters#threads) (conversations) and carry [Scores](/documentation/features/evals/evaluators) (evaluation results). Every feature in the platform reads from this same span data.
 
-Monitor, trace, and understand your LLM applications with full visibility into performance, costs, and user interactions.
+---
+
+## The full workflow
+
+Respan has three workflows that feed into each other:
+
+1. **Trace & monitor** captures production data: agent steps, LLM calls, user interactions.
+2. **Evaluate & optimize** turns that data into quality measurements, comparing prompt versions, models, and configurations.
+3. **Prompt & gateway** deploys the winning configuration and routes traffic.
+4. **Iterate** -- new traffic flows back into tracing, and the cycle repeats.
+
+```mermaid
+flowchart TD
+    T["Trace & monitor"] -->|"sample data"| E["Evaluate & optimize"]
+    E -->|"optimize deployment"| P["Prompt & gateway"]
+    P -->|"log traffic"| T
+```
+
+---
+
+### Trace & monitor
+
+Tracing records the execution tree of your workflows: every agent step, tool call, and model request in one view.
 
 <Tabs>
-  <Tab title="Monitoring">
-    Track your LLM applications in real-time with comprehensive dashboards for performance, costs, latency, and error rates.
-
-    <Frame className="rounded-md">
-      <video
-        controls
-        className="w-full aspect-video"
-        poster="https://keywordsai-static.s3.us-east-1.amazonaws.com/respan_landing/respan/monitor.png"
-        src="https://keywordsai-static.s3.us-east-1.amazonaws.com/respan_landing/respan/monitor.mp4"
-      ></video>
-    </Frame>
-  </Tab>
-
   <Tab title="Tracing">
-    Visualize and debug complex agent workflows with detailed trace trees showing every step, tool call, and LLM interaction.
+    See agent workflows as trace trees with parent-child spans. Each span shows its input, output, latency, and cost.
 
     <Frame className="rounded-md">
       <video
@@ -43,8 +51,21 @@ Monitor, trace, and understand your LLM applications with full visibility into p
     </Frame>
   </Tab>
 
-  <Tab title="User Analytics">
-    Understand how users interact with your AI product. Track user sessions, satisfaction, and usage patterns to improve the experience.
+  <Tab title="Monitoring">
+    Your dashboard shows requests, tokens, latency, cost, and error rates as they happen. Save [Views](/documentation/features/monitoring/views) for filters you reuse, and set [Alerts](/documentation/features/monitoring/notifications/subscribe_alerts) to get notified when something breaks.
+
+    <Frame className="rounded-md">
+      <video
+        controls
+        className="w-full aspect-video"
+        poster="https://keywordsai-static.s3.us-east-1.amazonaws.com/respan_landing/respan/monitor.png"
+        src="https://keywordsai-static.s3.us-east-1.amazonaws.com/respan_landing/respan/monitor.mp4"
+      ></video>
+    </Frame>
+  </Tab>
+
+  <Tab title="User analytics">
+    Pass a `customer_identifier` with your spans to see per-user metrics: usage, cost, and sessions. You can also set [budgets](/documentation/features/user-analytics/customer-identifier) and [rate limits](/documentation/features/user-analytics/customer-identifier) per user.
 
     <Frame className="rounded-md">
       <img
@@ -57,30 +78,80 @@ Monitor, trace, and understand your LLM applications with full visibility into p
   </Tab>
 </Tabs>
 
-<CardGroup cols={2}>
-  <Card
-    title="Logging quickstart"
-    icon="file-lines"
-    href="/documentation/getting-started/quickstart/logging"
-  >
-    Send your existing LLM calls to Respan for observability
-  </Card>
-  <Card
-    title="Tracing quickstart"
-    icon="sitemap"
-    href="/documentation/getting-started/quickstart/tracing"
-  >
-    Monitor complex agent workflows step-by-step
-  </Card>
-</CardGroup>
+**Choose one to get started:**
 
-### Optimize
+- [Tracing SDK](/documentation/features/tracing/traces/tracing-sdk): add `@workflow` / `@task` decorators. LLM calls are auto-captured.
+- [Framework integrations](/documentation/features/tracing/traces/integration-frameworks): pre-built exporters for OpenAI Agents SDK, Vercel AI, Mastra, LangGraph, and others.
+- Manual ingestion:
+  - [Ingest traces](/documentation/features/tracing/traces/manual-ingestion): send traces via OTLP or JSON API.
+  - [Ingest logs](/documentation/getting-started/quickstart/logging): log individual LLM calls.
 
-Iterate on prompts and measure quality with version control, playground testing, and automated evaluations.
+```mermaid
+flowchart TD
+    A["Respan Tracing SDK"] & B["Framework Integrations"] & C["Manual Ingestion"] --> D["Tracing"]
+    C -.->|"log LLM"| F
+    D --> F["Dashboard (Metrics, Users, Views)"]
+    F --> G["Notifications & Automations"]
+```
+
+Production spans feed directly into evaluations. Sample real traffic into datasets, run evaluators on live spans via [automations](/documentation/features/monitoring/automations/quickstart), or set up alerts to catch regressions after prompt changes.
+
+---
+
+### Evaluate & optimize
+
+With production data flowing, you can start measuring output quality. Respan supports two evaluation modes: online (live traffic) and offline (test datasets).
 
 <Tabs>
-  <Tab title="Prompt Management">
-    Isolate prompts from code, collaborate with your team, and iterate faster with version control and playground testing.
+  <Tab title="Offline evaluation">
+    Build datasets from production spans or CSV imports, run them through different prompt versions or models in experiments, and compare evaluator scores side by side.
+
+    <Frame className="rounded-md">
+      <video
+        controls
+        className="w-full aspect-video"
+        poster="https://keywordsai-static.s3.us-east-1.amazonaws.com/respan_landing/respan/evaluate.png"
+        src="https://keywordsai-static.s3.us-east-1.amazonaws.com/respan_landing/respan/evaluate.mp4"
+      ></video>
+    </Frame>
+  </Tab>
+
+  <Tab title="Online evaluation">
+    Run evaluators on live production traffic via [automations](/documentation/features/monitoring/automations/quickstart_online_eval). Flag bad responses automatically and get alerted when quality drops.
+  </Tab>
+</Tabs>
+
+**The eval pipeline:**
+
+- Online: production data goes directly to [evaluators](/documentation/features/evals/evaluators), which produce scores in real time.
+- Offline:
+  1. [Build a dataset](/documentation/features/evals/dataset): sample production spans or [import test cases](/documentation/features/evals/testsets) via CSV.
+  2. [Set up evaluators](/documentation/features/evals/evaluators): LLM evaluators (an LLM judges quality), code evaluators (a Python function checks format or length), or human evaluators (your team reviews manually).
+  3. [Run experiments](/documentation/features/evals/experiments-v2): test your dataset against different prompt versions or models.
+  4. Compare scores.
+
+```mermaid
+flowchart TD
+    P["Production Data"]
+    P -->|"online"| E["Evaluators"]
+    P -->|"offline"| D["Datasets"]
+    D --> E
+    E -->|"online"| S["Scores"]
+    E -->|"offline"| X["Experiments"]
+    X --> S
+```
+
+Datasets come from the production spans captured by tracing. Experiment results tell you which prompt version to deploy. Online evaluations feed into monitoring alerts so quality issues surface immediately.
+
+---
+
+### Prompt & gateway
+
+Manage prompts outside your codebase and route LLM traffic through one API.
+
+<Tabs>
+  <Tab title="Prompt management">
+    Create templates with `{{variables}}`, commit versions, test in the playground, and deploy without code changes. Your application picks up new versions immediately.
 
     <Frame className="rounded-md">
       <video
@@ -92,96 +163,49 @@ Iterate on prompts and measure quality with version control, playground testing,
     </Frame>
   </Tab>
 
-  <Tab title="Evals">
-    Test and measure your AI outputs systematically with evaluators, datasets, and experiments.
-
-    <Frame className="rounded-md">
-      <video
-        controls
-        className="w-full aspect-video"
-        poster="https://keywordsai-static.s3.us-east-1.amazonaws.com/respan_landing/respan/evaluate.png"
-        src="https://keywordsai-static.s3.us-east-1.amazonaws.com/respan_landing/respan/evaluate.mp4"
-      ></video>
-    </Frame>
+  <Tab title="AI gateway">
+    Route LLM traffic through a single API for automatic logging, fallbacks, retries, load balancing, and caching. Supports 250+ models across OpenAI, Anthropic, Google, Azure, and others. Change the base URL and you're connected.
   </Tab>
 </Tabs>
 
-<CardGroup cols={2}>
-  <Card
-    title="Prompt management quickstart"
-    icon="wand-magic-sparkles"
-    href="/documentation/getting-started/quickstart/prompt_management"
-  >
-    Create, version, and deploy prompt templates with team collaboration
-  </Card>
-  <Card
-    title="Evaluation quickstart"
-    icon="chart-simple"
-    href="/documentation/getting-started/quickstart/evaluation"
-  >
-    Set up automated testing with evaluators, datasets, and experiments
-  </Card>
-</CardGroup>
+**Workflow:**
 
-### Gateway
+1. [Create prompts](/documentation/features/prompt-management/manage-prompts): create templates, commit versions, compare changes.
+2. [Set up gateway](/documentation/features/gateway/quickstart): access 250+ models with one line of code.
+3. [Use prompt in code](/documentation/features/prompt-management/manage-prompts#deployment--versioning): reference prompts by ID. Deploy new versions without code changes.
+4. [Add fallbacks, retries, load balancing, and caching](/documentation/features/gateway/advanced-configuration): configure reliability and cost optimization for your gateway traffic.
 
-Interface with 250+ LLMs via one unified API with built-in load balancing, fallbacks, retries, and prompt caching.
+<Note>
+The gateway adds ~50-150ms of latency. If latency is critical, use [tracing](/documentation/getting-started/quickstart/tracing) for observability instead of routing through the gateway.
+</Note>
 
 ```mermaid
 flowchart TD
-  A[Your Application] --> B[Respan Gateway]
-  B --> C[250+ Models]
-  C --> D[Model Fallback]
-  C --> E[Load Balancing]
-  C --> F[Retries]
-  C --> G[Prompt Caching]
-  D --> Z[Optimized Response]
-  E --> Z
-  F --> Z
-  G --> Z
+    A["Create Prompts"] --> B["AI Gateway"]
+    B --> C["Use Prompt in Code"]
+    C --> D["Fallbacks & Retries"]
+    C --> E["Load Balancing"]
+    C --> F["Caching"]
 ```
 
-<CardGroup cols={1}>
-  <Card
-    title="AI gateway quickstart"
-    icon="route"
-    href="/documentation/getting-started/quickstart/gateway"
-  >
-    Connect to 250+ models with unified API, fallbacks, and cost optimization
-  </Card>
-</CardGroup>
+All gateway traffic is logged automatically, feeding back into tracing. Prompt variables appear in spans so you can see which version and inputs produced each output. Prompts deployed here are typically tested through the evaluation pipeline first.
 
-## Why Respan?
+---
 
-Respan is the **only platform** that combines AI Gateway, Observability, Prompt Management, and Evaluations in one unified solution. Unlike other tools that focus on single aspects of LLM development, we provide everything you need to build, monitor, and improve AI applications.
+## Platform comparison
 
-<CardGroup cols={2}>
-  <Card title="Unified platform" icon="puzzle-piece">
-    No need to integrate multiple tools - all core features in one solution
-  </Card>
-  <Card title="24/7 support" icon="headset">
-    Dedicated support team available around the clock
-  </Card>
-  <Card title="Simple setup" icon="rocket">
-    Get started in minutes with our managed platform and straightforward integration process
-  </Card>
-  <Card title="Enterprise ready" icon="shield">
-    SOC 2, GDPR, and HIPAA compliant with enterprise-grade security and scalability built for production environments
-  </Card>
-</CardGroup>
+| Feature | **Respan** | Langfuse | Braintrust |
+|:--------|:---------------:|:--------:|:----------:|
+| **AI gateway** | ✅ | ❌ | ❌ |
+| **Observability** | ✅ | ✅ | ✅ |
+| **Prompt management** | ✅ | ✅ | ✅ |
+| **Evaluations** | ✅ | ✅ | ✅ |
+| **Online evaluations** | ✅ | ❌ | ❌ |
+| **Team collaboration** | ✅ | ✅ | ✅ |
+| **Setup complexity** | Simple | Hard | Medium |
+| **Support service** | 24/7 dedicated | GitHub (24-48h) | Support center |
 
-### Platform comparison
-
-| Feature | **Respan** | Langfuse | Helicone | Braintrust |
-|:--------|:---------------:|:--------:|:--------:|:----------:|
-| **AI gateway** | ✅ | ❌ | ✅ | Limited |
-| **Observability** | ✅ | ✅ | ✅ | ✅ |
-| **Prompt management** | ✅ | ✅ | Limited | ✅ |
-| **Evaluations** | ✅ | ✅ | ❌ | ✅ |
-| **Team collaboration** | ✅ | ✅ | ✅ | ✅ |
-| **Setup complexity** | Simple | Hard | Simple | Medium |
-| **Hosting** | Managed | Open Source | Managed | Enterprise |
-| **Support service** | 24/7 dedicated | GitHub (24-48h) | Contact form | Support center |
+---
 
 ## Support
 
@@ -196,7 +220,7 @@ Respan is the **only platform** that combines AI Gateway, Observability, Prompt 
   <Card
     title="Book a demo"
     icon="calendar"
-    href="https://cal.com/respan"
+    href="https://cal.com/team/respan/demo"
   >
     Schedule a personalized walkthrough
   </Card>

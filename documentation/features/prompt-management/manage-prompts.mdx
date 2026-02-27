@@ -1,155 +1,29 @@
 ---
-title: "Manage prompts"
-description: "Create, configure, version, and deploy prompt templates on Respan."
+title: "Advanced"
+description: "Variables, composition, structured output, and deployment options for prompt templates."
 ---
 
-Prompts are reusable templates that guide LLM responses. Create them on Respan to version, share, deploy, and monitor your prompt templates.
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
 
----
 
-## Quick start
-
-<Tabs>
-<Tab title="Via UI">
-
-<Steps>
-<Step title="Create a new prompt">
-Go to the [Prompts page](https://platform.respan.ai/platform/prompts) and click **Create new prompt**. Name your prompt and add a description.
-
-<img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/get-started/create-new-prompt.png" alt="Create new prompt" />
-</Step>
-<Step title="Configure the prompt">
-In the **Editor** tab, set parameters like model, temperature, max tokens, and top P in the right sidebar. You can also add function calls and fallback models.
-
-<img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/get-started/configure-prompt.png" alt="Configure prompt" />
-</Step>
-<Step title="Write the content">
-Click **+ Add message** to add messages. Change the role to `user` or `assistant` by clicking the role name.
-
-<img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/get-started/write-prompt.png" alt="Write prompt content" />
-</Step>
-<Step title="Test and commit">
-1. Add values for each variable in the **Variables** tab.
-2. Click **Run** to test your prompt.
-3. Click **Commit** and write a commit message to save this version.
-
-<img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/get-started/prompt-commit.png" alt="Commit prompt" />
-</Step>
-<Step title="Deploy to production">
-Go to the **Deployments** tab and click **Deploy** to make this version live.
-
-<Frame>
-<img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/prompt/prompts-deploy.jpg" alt="Deploy prompt" />
-</Frame>
-</Step>
-</Steps>
-
-</Tab>
-<Tab title="Via API">
-
-**1. Create a prompt**
-
-<CodeGroup>
-```python Python
-import requests
-
-url = "https://api.respan.ai/api/prompts/"
-data = {
-    "name": "Your Prompt Name",
-    "description": "Your Prompt Description"
-}
-headers = {
-    "Authorization": "Bearer YOUR_RESPAN_API_KEY",
-    "Content-Type": "application/json"
-}
-
-response = requests.post(url, headers=headers, json=data)
-print(response.json())
-```
-```typescript TypeScript
-fetch('https://api.respan.ai/api/prompts/', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer YOUR_RESPAN_API_KEY'
-  },
-  body: JSON.stringify({
-    name: "Your Prompt Name",
-    description: "Your Prompt Description"
-  })
-})
-.then(response => response.json())
-.then(data => console.log(data));
-```
-</CodeGroup>
-
-**2. Create a version**
-
-Use the prompt ID from the response to create a version:
-
-<CodeGroup>
-```python Python
-import requests
-
-url = "https://api.respan.ai/api/prompts/<prompt_id>/versions/"
-data = {
-    "description": "A description of the prompt version",
-    "messages": [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Hello, how are you?"}
-    ],
-    "model": "gpt-4o-mini",
-    "temperature": 0.7,
-    "max_tokens": 256,
-}
-headers = {
-    "Authorization": "Bearer YOUR_RESPAN_API_KEY",
-    "Content-Type": "application/json"
-}
-
-response = requests.post(url, headers=headers, json=data)
-print(response.json())
-```
-```typescript TypeScript
-fetch('https://api.respan.ai/api/prompts/<prompt_id>/versions/', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer YOUR_RESPAN_API_KEY'
-  },
-  body: JSON.stringify({
-    description: "A description of the prompt version",
-    messages: [
-      {role: "system", content: "You are a helpful assistant."},
-      {role: "user", content: "Hello, how are you?"}
-    ],
-    model: "gpt-4o-mini",
-    temperature: 0.7,
-    max_tokens: 256,
-  })
-})
-.then(response => response.json())
-.then(data => console.log(data));
-```
-</CodeGroup>
-
-See the [Prompts API reference](/apis/develop/prompts/create-prompts) for full details.
-
-</Tab>
-</Tabs>
+Build, test, and deploy prompt templates on Respan. New to prompts? Start with the [quickstart guide](/documentation/getting-started/quickstart/prompt_management).
 
 ---
 
 ## Variables
 
-Variables are a core part of prompt management. Use `{{variable_name}}` syntax to add dynamic content to your prompts. Variables let you reuse the same prompt template across different inputs: pass values at runtime from your code, or fill them from testset columns when running experiments.
+Use `{{variable_name}}` syntax to add dynamic content to your prompts. Variables let you reuse the same template across different inputs — pass values at runtime from code, or fill them from testset columns in experiments.
 
 Respan also supports [Jinja templates](https://jinja.palletsprojects.com/en/stable/templates/) for conditionals, filters, and JSON input access.
 
 <Tabs>
-<Tab title="Via UI">
+<Tab title="Setup">
 
-Add variables directly in the prompt editor using `{{variable_name}}`:
+Add variables in the prompt editor using `{{variable_name}}`:
 
 ```
 Please develop an optimized Python function to {{task_description}},
@@ -178,56 +52,121 @@ Variable names must use underscores: `{{task_description}}` not `{{task descript
 See the [Filters in Jinja templates](/documentation/resources/cookbooks/filters-in-jinja) guide for details.
 
 </Tab>
-<Tab title="Via API">
+<Tab title="Use in code">
 
-Include `{{variable_name}}` in your message content when creating a version. Pass variable defaults in the `variables` field:
+Pass variables in `extra_body` when calling the gateway:
 
-<CodeGroup>
-```python Python
+<Tabs>
+<Tab title="OpenAI Python SDK">
+```python
+from openai import OpenAI
+
+client = OpenAI(
+  base_url="https://api.respan.ai/api/",
+  api_key="YOUR_RESPAN_API_KEY",
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "placeholder"}],
+    extra_body={
+        "prompt": {
+            "prompt_id": "YOUR_PROMPT_ID",
+            "variables": {
+                "task_description": "Square a number",
+                "specific_library": "math"
+            },
+            "override": True,
+        }
+    }
+)
+```
+</Tab>
+<Tab title="OpenAI TypeScript SDK">
+```typescript
+import { OpenAI } from "openai";
+
+const client = new OpenAI({
+  baseURL: "https://api.respan.ai/api",
+  apiKey: "YOUR_RESPAN_API_KEY",
+});
+
+const response = await client.chat.completions
+  .create({
+    messages: [{ role: "user", content: "placeholder" }],
+    model: "gpt-4o-mini",
+    // @ts-expect-error
+    prompt: {
+      prompt_id: "YOUR_PROMPT_ID",
+      variables: {
+        task_description: "Square a number",
+        specific_library: "math",
+      },
+      override: true,
+    },
+  })
+  .asResponse();
+
+console.log(await response.json());
+```
+</Tab>
+<Tab title="Standard API">
+```python
+import requests
+
+headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer YOUR_RESPAN_API_KEY',
+}
+
+data = {
+    'prompt': {
+        'prompt_id': 'YOUR_PROMPT_ID',
+        'variables': {
+            'task_description': 'Square a number',
+            'specific_library': 'math',
+        },
+    }
+}
+
+response = requests.post(
+    'https://api.respan.ai/api/chat/completions',
+    headers=headers,
+    json=data
+)
+print(response.json())
+```
+With the standard API, you don't need to pass `model` and `messages` — the prompt configuration is used automatically.
+</Tab>
+</Tabs>
+
+Jinja conditionals, filters, and JSON inputs work the same in API-created prompts. You can also set default variable values when creating a version via the API:
+
+```python
 data = {
     "messages": [
         {"role": "system", "content": "You are a helpful {{role}}."},
-        {"role": "user", "content": "Help me with {{task_description}} using {{specific_library}}."}
+        {"role": "user", "content": "Help me with {{task_description}}."}
     ],
     "model": "gpt-4o-mini",
     "variables": {
         "role": "assistant",
-        "task_description": "sorting an array",
-        "specific_library": "numpy"
+        "task_description": "sorting an array"
     },
 }
 ```
-```typescript TypeScript
-const data = {
-    messages: [
-        {role: "system", content: "You are a helpful {{role}}."},
-        {role: "user", content: "Help me with {{task_description}} using {{specific_library}}."}
-    ],
-    model: "gpt-4o-mini",
-    variables: {
-        role: "assistant",
-        task_description: "sorting an array",
-        specific_library: "numpy"
-    },
-};
-```
-</CodeGroup>
-
-Jinja conditionals, filters, and JSON inputs work the same in API-created prompts.
 
 </Tab>
 </Tabs>
 
----
+### JSON schema (structured output)
 
-## JSON schema
-
-Define structured output using JSON schema. This ensures AI responses follow a specific format, following the [OpenAI Structured Outputs specification](https://platform.openai.com/docs/guides/structured-outputs?api-mode=responses).
+Define structured output using JSON schema to ensure AI responses follow a specific format, following the [OpenAI Structured Outputs specification](https://platform.openai.com/docs/guides/structured-outputs?api-mode=responses).
 
 <Tabs>
-<Tab title="Via UI">
+<Tab title="Setup">
 
-You can set up JSON schema in the **prompt editor** or the **playground**:
+Configure JSON schema in the **prompt editor** or the **playground**:
 
 <Frame className="rounded-md">
 <img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/documentation/products/prompt_management/creating_prompts/json_schema/setup1_prompt.png" alt="JSON schema in prompt editor" />
@@ -244,7 +183,7 @@ You can generate schemas using the AI generator or browse examples in the editor
 </Frame>
 
 </Tab>
-<Tab title="Via API">
+<Tab title="Use in code">
 
 Pass `response_format` when creating a prompt version:
 
@@ -304,6 +243,93 @@ const data = {
 </Tab>
 </Tabs>
 
+### Prompt composition
+
+Prompt composition lets a variable in one prompt reference another prompt. At request time, the child is rendered first, converted to plain text, and inserted into the parent variable.
+
+To use prompt composition, create two prompts: a **child** prompt and a **parent** prompt that has a `{{variable}}` where the child's output will be injected.
+
+<Tabs>
+<Tab title="Use in UI">
+
+<Steps>
+<Step title="Configure the variable">
+In the parent prompt editor:
+- Open the **Variables** panel on the right side
+- Find the variable you want to embed a prompt into
+- Change its type from **Text** to **Prompt**
+- Select the child prompt
+- Fill in all the child's variables
+
+<Frame className="rounded-md">
+<img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/documentation/products/prompt_management/advanced/prompt_composition.png" alt="Prompt composition setup" />
+</Frame>
+</Step>
+<Step title="Run your prompt">
+Click **Run** to test. The child prompt is rendered first, converted to plain text, and injected into the parent variable before the LLM sees it.
+</Step>
+</Steps>
+
+**Limits:**
+- Circular references are rejected (HTTP 400).
+- Maximum prompt-chain depth is **2** (parent → child is safest). Exceeding this returns HTTP 400.
+
+</Tab>
+<Tab title="Use in code">
+
+Instead of passing a plain string for a variable, pass a typed prompt object:
+
+```json
+{
+  "_type": "prompt",
+  "prompt_id": "CHILD_PROMPT_ID",
+  "version": 1,
+  "variables": {
+    "some_key": "some_value"
+  }
+}
+```
+
+Supported fields:
+- `_type` — must be `"prompt"`
+- `prompt_id` — identifies the child prompt
+- `version` — integer or `"latest"` (optional, defaults to deployed version)
+- `variables` — nested variables for the child prompt (optional)
+
+**Full example:**
+
+```python
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[],
+    extra_body={
+        "prompt": {
+            "prompt_id": "PARENT_PROMPT_ID",
+            "override": True,
+            "variables": {
+                "conversation": {
+                    "_type": "prompt",
+                    "prompt_id": "CHILD_PROMPT_ID",
+                    "version": 2,
+                    "variables": {
+                        "customer_name": "Sarah",
+                        "department": "billing"
+                    }
+                },
+                "request": "dispute a charge from last month"
+            }
+        }
+    },
+)
+```
+
+**Observability:** Resolved prompt variables are enriched in logs with `_rendered_result` — the plain-text output of the child prompt at runtime. This helps debug what the child actually resolved to.
+
+See the [Chat Completions API reference](/apis/develop/gateway/chat-completions) for more details.
+
+</Tab>
+</Tabs>
+
 ---
 
 ## Playground
@@ -334,24 +360,12 @@ Set the number of variants in the side panel to generate multiple responses and 
 
 ---
 
-## Streaming
+## Deployment & versioning
 
-Enable streaming in the prompt settings sidebar. After enabling, **commit and deploy** the prompt.
+<Tabs>
+<Tab title="Setup">
 
-<Frame>
-  <img className="block dark:hidden" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/prompt/prompts-stream-light.jpg" alt="Streaming" />
-  <img className="hidden dark:block" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/prompt/prompts-stream-dark.jpg" alt="Streaming" />
-</Frame>
-
-<Note>
-Streaming is controlled in the prompt settings UI, not through code.
-</Note>
-
----
-
-## Version control
-
-Track changes, roll back to earlier versions, and collaborate with your team.
+**Commit** saves a new version of your prompt. **Deploy** makes a version live for production traffic.
 
 View version history in the **Overview** panel, or click **Version** in the Editor for detailed diffs.
 
@@ -365,6 +379,236 @@ Click on each version to see the diff of changes.
 <img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/prompt/track-change.jpg" alt="Track changes" />
 </Frame>
 
+To deploy, go to the **Deployments** tab and click **Deploy**.
+
+<Frame>
+<img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/prompt/prompts-deploy.jpg" alt="Deploy prompt" />
+</Frame>
+
+To rollback, deploy an earlier version from the Deployments tab.
+
+</Tab>
+<Tab title="Use in code">
+
+### Version pinning
+
+- Omit `version` to use the **deployed** (live) version.
+- Set `version` to a number (e.g., `3`) to **pin** that version.
+- Use `"version": "latest"` to use the most recent **draft** (not deployed).
+
+```python
+{
+    "prompt": {
+        "prompt_id": "YOUR_PROMPT_ID",
+        "version": 3,
+    }
+}
+```
+
+### Override prompt messages
+
+<Tabs>
+<Tab title="Append messages">
+```python
+request_body = {
+    "prompt": {
+        "prompt_id": "042f5f",
+        "override_config": {"messages_override_mode": "append"},
+        "override_params": {"messages": [{"role": "user", "content": "Additional context"}]},
+    }
+}
+```
+Adds new messages to the end of your existing prompt messages.
+</Tab>
+<Tab title="Replace messages">
+```python
+request_body = {
+    "prompt": {
+        "prompt_id": "042f5f",
+        "override_config": {"messages_override_mode": "override"},
+        "override_params": {"messages": [{"role": "user", "content": "Completely new conversation"}]},
+    }
+}
+```
+Replaces all existing prompt messages with the new ones.
+</Tab>
+</Tabs>
+
+### Override other parameters
+
+```python
+request_body = {
+    "prompt": {
+        "prompt_id": "042f5f",
+        "override_params": {
+            "temperature": 0.8,
+            "max_tokens": 150,
+            "model": "gpt-4o"
+        }
+    }
+}
+```
+
+</Tab>
+</Tabs>
+
+---
+
+## Streaming
+
+Enable streaming in the prompt settings sidebar. After enabling, **commit and deploy** the prompt.
+
+<Frame>
+  <img className="block dark:hidden" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/prompt/prompts-stream-light.jpg" alt="Streaming" />
+  <img className="hidden dark:block" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/prompt/prompts-stream-dark.jpg" alt="Streaming" />
+</Frame>
+
+If you use a prompt with streaming enabled, you must also set `stream=True` in your SDK call:
+
+<CodeGroup>
+```python Python
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role":"user", "content":"Tell me a long story"}],
+    stream=True,
+    extra_body={
+      "prompt": {
+          "prompt_id": "YOUR_PROMPT_ID",
+          "variables": {"variable_name": "variable_value"},
+        }
+    }
+)
+```
+```typescript TypeScript
+const response = await client.chat.completions
+  .create({
+    messages: [{ role: "user", content: "Say this is a test" }],
+    model: "gpt-4o-mini",
+    stream: true,
+    // @ts-expect-error
+    prompt: {
+      prompt_id: "YOUR_PROMPT_ID",
+      variables: { variable_name: "variable_value" },
+    },
+  })
+  .asResponse();
+
+console.log(await response.json());
+```
+</CodeGroup>
+
+---
+
+## Prompt logging
+
+<Tabs>
+<Tab title="Respan prompts">
+
+Log prompt usage to track performance metrics, compare versions, and analyze request distribution.
+
+<CodeGroup>
+```python Python
+import requests
+
+url = "https://api.respan.ai/api/request-logs/create/"
+payload = {
+    "model": "claude-3-5-sonnet-20240620",
+    "completion_message": {
+        "role": "assistant",
+        "content": "Hi, how can I assist you today?"
+    },
+    "prompt": {
+        "prompt_id": "xxxxxx",
+        "variables": {
+            "task_description": "Square a number",
+            "specific_library": "math"
+        },
+    },
+    "generation_time": 5.7,
+    "ttft": 3.1,
+}
+headers = {
+    "Authorization": "Bearer YOUR_RESPAN_API_KEY",
+    "Content-Type": "application/json"
+}
+
+response = requests.post(url, headers=headers, json=payload)
+```
+```typescript TypeScript
+const url = 'https://api.respan.ai/api/request-logs/create/';
+const headers = {
+    'Authorization': 'Bearer YOUR_RESPAN_API_KEY',
+    'Content-Type': 'application/json'
+};
+
+const payload = {
+    model: 'claude-3-5-sonnet-20240620',
+    completion_message: {
+        role: "assistant",
+        content: "Hi, how can I assist you today?"
+    },
+    prompt: {
+        prompt_id: "xxxxxx",
+        variables: {
+            task_description: "Square a number",
+            specific_library: "math"
+        },
+    },
+    generation_time: 5.7,
+    ttft: 3.1,
+};
+
+fetch(url, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(payload)
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+</CodeGroup>
+
+<Frame>
+<video controls className="w-full aspect-video" src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/prompt/prompt-monitor.mp4"></video>
+</Frame>
+
+Filter logs by prompt name on the [Logs page](https://platform.respan.ai/platform/logs).
+
+<Frame>
+<img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/prompt/prompt-logs.png" alt="Prompt logs" />
+</Frame>
+
+</Tab>
+<Tab title="External prompts">
+
+If you manage prompts outside of Respan, pass any `prompt_id` and set `is_custom_prompt: true`:
+
+<CodeGroup>
+```python Python
+payload = {
+    "model": "claude-3-5-sonnet-20240620",
+    "prompt_messages": [{"role": "user", "content": "Hi"}],
+    "completion_message": {"role": "assistant", "content": "Hello!"},
+    "prompt_id": "your-custom-id",
+    "is_custom_prompt": True,
+    "generation_time": 5.7
+}
+```
+```typescript TypeScript
+const payload = {
+    model: 'claude-3-5-sonnet-20240620',
+    prompt_messages: [{role: 'user', content: 'Hi'}],
+    completion_message: {role: 'assistant', content: 'Hello!'},
+    prompt_id: 'your-custom-id',
+    is_custom_prompt: true,
+    generation_time: 5.7
+};
+```
+</CodeGroup>
+
+</Tab>
+</Tabs>
+
 ---
 
 ## Team collaboration
@@ -376,3 +620,47 @@ Click on each version to see the diff of changes.
 <Frame>
 <img src="https://keywordsai-static.s3.us-east-1.amazonaws.com/docs/prompt/prompt-share.png" alt="Share prompt" />
 </Frame>
+
+---
+
+## Parameters reference
+
+<ParamField path="prompt_id" type="string" required>
+  The unique identifier of your saved prompt template.
+</ParamField>
+
+<ParamField path="variables" type="object">
+  Variables to inject into your prompt template. Values can be strings or typed prompt objects for [composition](#prompt-composition).
+```json
+{
+  "variables": {
+    "user_name": "John",
+    "task": "summarize"
+  }
+}
+```
+</ParamField>
+
+<ParamField path="override" type="boolean" default={false}>
+  When `true`, the saved prompt configuration overrides SDK parameters like `model` and `messages`.
+</ParamField>
+
+<ParamField path="override_params" type="object">
+  Parameters that override your saved prompt configuration (temperature, max_tokens, messages, model, etc.).
+</ParamField>
+
+<ParamField path="override_config" type="object">
+  Controls how override parameters are applied.
+  - `messages_override_mode`: `"append"` (add to existing) or `"override"` (replace all)
+</ParamField>
+
+<ParamField path="echo" type="boolean" default={false}>
+  When enabled, the response includes the final prompt messages used.
+</ParamField>
+
+<ParamField path="version" type="integer | string">
+  Pin a specific prompt version. Omit for deployed version, use `"latest"` for newest draft.
+</ParamField>
+
+<Info>See [all Respan supported params](/apis/develop/gateway/chat-completions#respan-parameters).</Info>
+

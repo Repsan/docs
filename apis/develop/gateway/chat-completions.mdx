@@ -558,7 +558,31 @@ This parameter specifies the cache options. Currently we support `cache_by_custo
       The ID of the prompt to use. You can find this on the Prompts page.
     </ParamField>
     <ParamField body="variables" type="object">
-      The variables to replace in the prompt template.
+      The variables to replace in the prompt template. Values can be plain strings or **typed prompt objects** for [prompt composition](/documentation/features/prompt-management/manage-prompts#prompt-composition).
+
+      To reference another prompt as a variable, pass a typed object instead of a string:
+      ```json
+      {
+        "variables": {
+          "regular_var": "plain string value",
+          "composed_var": {
+            "_type": "prompt",
+            "prompt_id": "CHILD_PROMPT_ID",
+            "version": 1,
+            "variables": {
+              "child_var": "value"
+            }
+          }
+        }
+      }
+      ```
+      Typed prompt variable fields:
+      - `_type` — must be `"prompt"`
+      - `prompt_id` — the child prompt ID
+      - `version` — integer or `"latest"` (optional, defaults to deployed version)
+      - `variables` — nested variables for the child prompt (optional)
+
+      The child prompt is rendered first, flattened to plain text, and injected into the parent. Max depth is **2**; circular references return HTTP 400. Resolved values appear in logs as `_rendered_result`.
     </ParamField>
     <ParamField body="version" type="number or string">
       The prompt version to use.
@@ -629,6 +653,28 @@ This parameter allows you to control how you can override the parameters in the 
       },
       // "echo": true //optional parameter
     }
+}
+```
+      </Accordion>
+    <Accordion title="Prompt composition example">
+```json
+{
+  "prompt": {
+    "prompt_id": "PARENT_PROMPT_ID",
+    "override": true,
+    "variables": {
+      "request": "dispute a charge from last month",
+      "conversation": {
+        "_type": "prompt",
+        "prompt_id": "CHILD_PROMPT_ID",
+        "version": 2,
+        "variables": {
+          "customer_name": "Sarah",
+          "department": "billing"
+        }
+      }
+    }
+  }
 }
 ```
       </Accordion>

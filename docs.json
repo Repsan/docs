@@ -32,15 +32,7 @@
             "group": "Get started",
             "pages": [
               "/documentation/getting-started/overview",
-              {
-                "group": "Workflows",
-                "pages": [
-                  "/documentation/getting-started/quickstart/tracing-workflow",
-                  "/documentation/getting-started/quickstart/prompt-gateway-workflow",
-                  "/documentation/getting-started/quickstart/evaluate-workflow"
-                ]
-              },
-              "/documentation/getting-started/data_model"
+              "/documentation/getting-started/quickstart/tracing"
             ]
           },
           {
@@ -63,9 +55,8 @@
                   {
                     "group": "Traces",
                     "pages": [
-                      "/documentation/getting-started/quickstart/tracing",
-                      "/documentation/features/tracing/traces/integration-frameworks",
                       "/documentation/features/tracing/traces/tracing-sdk",
+                      "/documentation/features/tracing/traces/integration-frameworks",
                       "/documentation/features/tracing/traces/manual-ingestion",
                       "/documentation/features/tracing/traces/span-parameters"
                     ]
@@ -114,8 +105,7 @@
                 "group": "Prompt management",
                 "pages": [
                   "/documentation/getting-started/quickstart/prompt_management",
-                  "/documentation/features/prompt-management/manage-prompts",
-                  "/documentation/features/prompt-management/use-prompt"
+                  "/documentation/features/prompt-management/manage-prompts"
                 ]
               },
               {
@@ -179,6 +169,7 @@
               {
                 "group": "Reference",
                 "pages": [
+                  "/documentation/resources/reference/data_model",
                   "/documentation/resources/reference/span-fields",
                   "/documentation/resources/reference/error-handling",
                   "/documentation/resources/reference/api-rate-limits"
@@ -214,35 +205,11 @@
           {
             "group": "Agent frameworks",
             "pages": [
-              {
-                "group": "OpenAI Agents",
-                "pages": [
-                  "/integrations/tracing/openai-agents-sdk",
-                  "/integrations/tracing/openai-agents-sdk-js"
-                ]
-              },
-              {
-                "group": "Anthropic Agents",
-                "pages": [
-                  "/integrations/tracing/anthropic-agents-sdk",
-                  "/integrations/tracing/anthropic-agents-sdk-js"
-                ]
-              },
-              {
-                "group": "Vercel AI SDK",
-                "pages": [
-                  "/integrations/tracing/vercel-tracing",
-                  "/integrations/gateway/vercel"
-                ]
-              },
+              "/integrations/tracing/openai-agents-sdk",
+              "/integrations/tracing/anthropic-agents-sdk",
+              "/integrations/tracing/vercel-tracing",
               "/integrations/tracing/langgraph",
-              {
-                "group": "Haystack",
-                "pages": [
-                  "/integrations/tracing/haystack",
-                  "/integrations/gateway/haystack"
-                ]
-              },
+              "/integrations/tracing/haystack",
               "/integrations/tracing/mastra",
               "/integrations/tracing/agno",
               "/integrations/gateway/langchain",
@@ -277,13 +244,7 @@
           {
             "group": "Structured output",
             "pages": [
-              {
-                "group": "BAML",
-                "pages": [
-                  "/integrations/tracing/baml",
-                  "/integrations/others/baml"
-                ]
-              },
+              "/integrations/tracing/baml",
               "/integrations/tracing/instructor"
             ]
           },
@@ -842,7 +803,27 @@
     },
     {
       "source": "/integrations/development-frameworks/openai-agents-sdk-js",
-      "destination": "/integrations/tracing/openai-agents-sdk-js"
+      "destination": "/integrations/tracing/openai-agents-sdk"
+    },
+    {
+      "source": "/integrations/tracing/openai-agents-sdk-js",
+      "destination": "/integrations/tracing/openai-agents-sdk"
+    },
+    {
+      "source": "/integrations/tracing/anthropic-agents-sdk-js",
+      "destination": "/integrations/tracing/anthropic-agents-sdk"
+    },
+    {
+      "source": "/integrations/gateway/vercel",
+      "destination": "/integrations/tracing/vercel-tracing"
+    },
+    {
+      "source": "/integrations/gateway/haystack",
+      "destination": "/integrations/tracing/haystack"
+    },
+    {
+      "source": "/integrations/others/baml",
+      "destination": "/integrations/tracing/baml"
     },
     {
       "source": "/integrations/development-frameworks/openai-sdk",
@@ -874,11 +855,11 @@
     },
     {
       "source": "/integrations/development-frameworks/llm_framework/haystack",
-      "destination": "/integrations/gateway/haystack"
+      "destination": "/integrations/tracing/haystack"
     },
     {
       "source": "/integrations/development-frameworks/llm_framework/vercel",
-      "destination": "/integrations/gateway/vercel"
+      "destination": "/integrations/tracing/vercel-tracing"
     },
     {
       "source": "/integrations/development-frameworks/llm_framework/llama-index",
@@ -898,7 +879,7 @@
     },
     {
       "source": "/integrations/development-frameworks/tracing/openai-agents-sdk-js",
-      "destination": "/integrations/tracing/openai-agents-sdk-js"
+      "destination": "/integrations/tracing/openai-agents-sdk"
     },
     {
       "source": "/integrations/development-frameworks/tracing/mastra",
@@ -938,7 +919,7 @@
     },
     {
       "source": "/integrations/development-frameworks/baml",
-      "destination": "/integrations/others/baml"
+      "destination": "/integrations/tracing/baml"
     },
     {
       "source": "/integrations/others/posthog",
@@ -1210,11 +1191,11 @@
     },
     {
       "source": "/documentation/products/prompt_management/use_prompt_in_code/use_prompt_in_llms",
-      "destination": "/documentation/features/prompt-management/use-prompt"
+      "destination": "/documentation/features/prompt-management/manage-prompts"
     },
     {
       "source": "/documentation/products/prompt_management/use_prompt_in_code/prompt_logging",
-      "destination": "/documentation/features/prompt-management/use-prompt#use-prompt-in-logging"
+      "destination": "/documentation/features/prompt-management/manage-prompts#prompt-logging"
     },
     {
       "source": "/documentation/products/prompt_management/management_collaboration/team_collaboration",
@@ -1254,15 +1235,19 @@
     },
     {
       "source": "/documentation/features/prompt-management/use_prompt_in_code/use_prompt_in_llms",
-      "destination": "/documentation/features/prompt-management/use-prompt"
+      "destination": "/documentation/features/prompt-management/manage-prompts"
     },
     {
       "source": "/documentation/features/prompt-management/use_prompt_in_code/prompt_logging",
-      "destination": "/documentation/features/prompt-management/use-prompt#use-prompt-in-logging"
+      "destination": "/documentation/features/prompt-management/manage-prompts#prompt-logging"
     },
     {
       "source": "/documentation/features/prompt-management/management_collaboration/team_collaboration",
       "destination": "/documentation/features/prompt-management/manage-prompts#team-collaboration"
+    },
+    {
+      "source": "/documentation/features/prompt-management/use-prompt",
+      "destination": "/documentation/features/prompt-management/manage-prompts"
     },
     {
       "source": "/documentation/products/evaluation/llm-evals/llm-evaluator",
@@ -1550,8 +1535,12 @@
       "destination": "/documentation/getting-started/quickstart/evaluation"
     },
     {
+      "source": "/documentation/getting-started/data_model",
+      "destination": "/documentation/resources/reference/data_model"
+    },
+    {
       "source": "/get-started/observability_data_model",
-      "destination": "/documentation/getting-started/data_model"
+      "destination": "/documentation/resources/reference/data_model"
     },
     {
       "source": "/get-started/llm-inference",
@@ -1593,7 +1582,7 @@
     },
     {
       "source": "/integration/development-frameworks/openai-agents-sdk-js",
-      "destination": "/integrations/tracing/openai-agents-sdk-js"
+      "destination": "/integrations/tracing/openai-agents-sdk"
     },
     {
       "source": "/integration/development-frameworks/openai-sdk",
@@ -1605,7 +1594,7 @@
     },
     {
       "source": "/integration/development-frameworks/tracing/openai-agents-sdk-js",
-      "destination": "/integrations/tracing/openai-agents-sdk-js"
+      "destination": "/integrations/tracing/openai-agents-sdk"
     },
     {
       "source": "/integration/tracing/vercel-tracing",
@@ -1665,11 +1654,11 @@
     },
     {
       "source": "/integration/development-frameworks/llm_framework/haystack",
-      "destination": "/integrations/gateway/haystack"
+      "destination": "/integrations/tracing/haystack"
     },
     {
       "source": "/integration/development-frameworks/llm_framework/vercel",
-      "destination": "/integrations/gateway/vercel"
+      "destination": "/integrations/tracing/vercel-tracing"
     },
     {
       "source": "/integration/development-frameworks/llm_framework/llama-index",
@@ -1685,7 +1674,7 @@
     },
     {
       "source": "/integration/development-frameworks/baml",
-      "destination": "/integrations/others/baml"
+      "destination": "/integrations/tracing/baml"
     },
     {
       "source": "/integration/others/cognee",
