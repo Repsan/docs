@@ -58,6 +58,27 @@ export ANTHROPIC_API_KEY="YOUR_ANTHROPIC_API_KEY"
 
 <Accordion title="Using the Respan gateway instead?">
 You can skip `ANTHROPIC_API_KEY` by routing calls through the [Respan gateway](/integrations/gateway/anthropic-agents-sdk). The gateway uses your `RESPAN_API_KEY` for both the LLM call and trace export.
+
+```bash
+export RESPAN_API_KEY="YOUR_RESPAN_API_KEY"
+# No ANTHROPIC_API_KEY needed
+```
+
+Pass the gateway URL and key via `ClaudeAgentOptions.env`:
+
+```python
+options = ClaudeAgentOptions(
+    permission_mode="bypassPermissions",
+    max_turns=1,
+    env={
+        "ANTHROPIC_BASE_URL": "https://api.respan.ai/api/anthropic",
+        "ANTHROPIC_AUTH_TOKEN": RESPAN_API_KEY,
+        "ANTHROPIC_API_KEY": RESPAN_API_KEY,
+    },
+)
+```
+
+See the [full gateway guide](/integrations/gateway/anthropic-agents-sdk) for more details.
 </Accordion>
 
 </Step>
