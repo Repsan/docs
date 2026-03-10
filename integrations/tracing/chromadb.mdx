@@ -1,0 +1,163 @@
+---
+title: "ChromaDB"
+description: "Trace ChromaDB vector database operations with Respan."
+---
+
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
+
+<Accordion title="Use AI">
+Add the [Docs MCP](/documentation/getting-started/ask-ai) to your AI coding tool to get help building with Respan. No API key needed.
+```json
+{
+  "mcpServers": {
+    "respan-docs": {
+      "url": "https://docs.respan.ai/mcp"
+    }
+  }
+}
+```
+</Accordion>
+
+## What is ChromaDB?
+
+[ChromaDB](https://www.trychroma.com/) is an open-source embedding database for building AI applications. It handles embedding, storing, and searching vectors with built-in support for metadata filtering.
+
+## Setup
+
+<Steps>
+<Step title="Install packages">
+
+<CodeGroup>
+```bash Python
+pip install respan-tracing chromadb openai
+```
+```bash JavaScript
+npm install @respan/tracing chromadb openai
+```
+</CodeGroup>
+
+</Step>
+
+<Step title="Set environment variables">
+
+```bash
+export RESPAN_API_KEY="YOUR_RESPAN_API_KEY"
+export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+```
+
+</Step>
+
+<Step title="Initialize Respan and query ChromaDB">
+
+Respan auto-instruments ChromaDB — all collection operations (add, query, update, delete) are captured as spans.
+
+<CodeGroup>
+```python Python
+from respan_tracing import RespanTelemetry
+from respan_tracing.decorators import workflow, task
+import chromadb
+from openai import OpenAI
+
+# Initialize — auto-instruments ChromaDB
+telemetry = RespanTelemetry()
+client = OpenAI()
+chroma = chromadb.Client()
+collection = chroma.get_or_create_collection("docs")
+
+# Add documents (ChromaDB handles embeddings internally)
+collection.add(
+    documents=[
+        "Respan provides observability for LLM applications.",
+        "Traces capture the full lifecycle of an LLM request.",
+    ],
+    ids=["doc1", "doc2"],
+)
+
+
+@task(name="search_docs")
+def search_docs(query: str):
+    results = collection.query(query_texts=[query], n_results=3)
+    return results["documents"][0]
+
+
+@workflow(name="rag_pipeline")
+def rag_pipeline(query: str):
+    context = search_docs(query)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": f"Context: {context}"},
+            {"role": "user", "content": query},
+        ],
+    )
+    return response.choices[0].message.content
+
+
+result = rag_pipeline("How does tracing work?")
+print(result)
+```
+```typescript JavaScript
+import { RespanTelemetry } from '@respan/tracing';
+import { ChromaClient } from 'chromadb';
+import OpenAI from 'openai';
+
+const respan = new RespanTelemetry({
+    apiKey: process.env.RESPAN_API_KEY || "",
+    appName: 'chromadb-app',
+});
+await respan.enableInstrumentation('chromadb');
+
+const chroma = new ChromaClient();
+const collection = await chroma.getOrCreateCollection({ name: 'docs' });
+const openai = new OpenAI();
+
+// Add documents
+await collection.add({
+    documents: [
+        "Respan provides observability for LLM applications.",
+        "Traces capture the full lifecycle of an LLM request.",
+    ],
+    ids: ['doc1', 'doc2'],
+});
+
+// Query — auto-traced
+async function ragPipeline(query: string) {
+    return await respan.withWorkflow({ name: 'rag_pipeline' }, async () => {
+        const results = await respan.withTask({ name: 'search_docs' }, async () => {
+            return await collection.query({ queryTexts: [query], nResults: 3 });
+        });
+
+        const context = results.documents[0]?.join('\n') || '';
+        const completion = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+                { role: 'system', content: `Context: ${context}` },
+                { role: 'user', content: query },
+            ],
+        });
+        return completion.choices[0].message.content;
+    });
+}
+
+ragPipeline("How does tracing work?").then(console.log);
+```
+</CodeGroup>
+
+</Step>
+
+<Step title="View your trace">
+
+Open the [Traces page](https://platform.respan.ai/platform/traces) to see ChromaDB operations as spans in your trace tree.
+
+</Step>
+</Steps>
+
+## Configuration
+
+ChromaDB is auto-instrumented via `Instruments.CHROMA` (Python) or `chromaDB` (JavaScript). No additional configuration is needed.
+
+See the [Python Tracing SDK reference](/sdks/python/tracing/main/initialize) or [JavaScript Tracing SDK reference](/sdks/typescript/tracing/main/initialize) for configuration options.

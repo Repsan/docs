@@ -1,0 +1,115 @@
+---
+title: "Marqo"
+description: "Trace Marqo vector search operations with Respan."
+---
+
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
+
+<Accordion title="Use AI">
+Add the [Docs MCP](/documentation/getting-started/ask-ai) to your AI coding tool to get help building with Respan. No API key needed.
+```json
+{
+  "mcpServers": {
+    "respan-docs": {
+      "url": "https://docs.respan.ai/mcp"
+    }
+  }
+}
+```
+</Accordion>
+
+## What is Marqo?
+
+[Marqo](https://www.marqo.ai/) is a tensor search engine that combines embedding generation, storage, and search in a single API. It handles vectorization automatically — no need to manage embeddings separately.
+
+## Setup
+
+<Steps>
+<Step title="Install packages">
+
+```bash
+pip install respan-tracing marqo openai
+```
+
+</Step>
+
+<Step title="Set environment variables">
+
+```bash
+export RESPAN_API_KEY="YOUR_RESPAN_API_KEY"
+export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+```
+
+</Step>
+
+<Step title="Initialize Respan and query Marqo">
+
+Respan auto-instruments Marqo — search, add_documents, and index operations are captured as spans.
+
+```python
+from respan_tracing import RespanTelemetry
+from respan_tracing.decorators import workflow, task
+import marqo
+from openai import OpenAI
+
+# Initialize — auto-instruments Marqo
+telemetry = RespanTelemetry()
+client = OpenAI()
+mq = marqo.Client(url="http://localhost:8882")
+
+# Create index and add documents (Marqo handles embeddings internally)
+mq.create_index("docs")
+mq.index("docs").add_documents(
+    [
+        {"text": "Respan provides observability for LLM applications.", "_id": "doc1"},
+        {"text": "Traces capture the full lifecycle of an LLM request.", "_id": "doc2"},
+    ],
+    tensor_fields=["text"],
+)
+
+
+@task(name="search_docs")
+def search_docs(query: str):
+    results = mq.index("docs").search(query, limit=3)
+    return [hit["text"] for hit in results["hits"]]
+
+
+@workflow(name="rag_pipeline")
+def rag_pipeline(query: str):
+    context = search_docs(query)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": f"Context: {chr(10).join(context)}"},
+            {"role": "user", "content": query},
+        ],
+    )
+    return response.choices[0].message.content
+
+
+result = rag_pipeline("How does tracing work?")
+print(result)
+```
+
+</Step>
+
+<Step title="View your trace">
+
+Open the [Traces page](https://platform.respan.ai/platform/traces) to see Marqo operations as spans in your trace tree.
+
+</Step>
+</Steps>
+
+## Configuration
+
+Marqo is auto-instrumented via `Instruments.MARQO`. No additional configuration is needed.
+
+<Note>
+Marqo tracing is currently available in the Python SDK only.
+</Note>
+
+See the [Python Tracing SDK reference](/sdks/python/tracing/main/initialize) for configuration options.

@@ -222,6 +222,18 @@
                   "/integrations/tracing/langfuse",
                   "/integrations/tracing/braintrust"
                 ]
+              },
+              {
+                "group": "Vector Databases",
+                "pages": [
+                  "/integrations/tracing/chromadb",
+                  "/integrations/tracing/pinecone",
+                  "/integrations/tracing/qdrant",
+                  "/integrations/tracing/milvus",
+                  "/integrations/tracing/weaviate",
+                  "/integrations/tracing/lancedb",
+                  "/integrations/tracing/marqo"
+                ]
               }
             ]
           },

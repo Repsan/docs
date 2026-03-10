@@ -1,0 +1,135 @@
+---
+title: "Milvus"
+description: "Trace Milvus vector database operations with Respan."
+---
+
+<Accordion title="Set up Respan">
+1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+</Accordion>
+
+<Accordion title="Use AI">
+Add the [Docs MCP](/documentation/getting-started/ask-ai) to your AI coding tool to get help building with Respan. No API key needed.
+```json
+{
+  "mcpServers": {
+    "respan-docs": {
+      "url": "https://docs.respan.ai/mcp"
+    }
+  }
+}
+```
+</Accordion>
+
+## What is Milvus?
+
+[Milvus](https://milvus.io/) is an open-source vector database built for scalable similarity search and AI applications. Milvus Lite provides a lightweight local version for development.
+
+## Setup
+
+<Steps>
+<Step title="Install packages">
+
+```bash
+pip install respan-tracing pymilvus openai
+```
+
+</Step>
+
+<Step title="Set environment variables">
+
+```bash
+export RESPAN_API_KEY="YOUR_RESPAN_API_KEY"
+export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+```
+
+</Step>
+
+<Step title="Initialize Respan and query Milvus">
+
+Respan auto-instruments Milvus — search, insert, and delete operations are captured as spans.
+
+```python
+from respan_tracing import RespanTelemetry
+from respan_tracing.decorators import workflow, task
+from pymilvus import MilvusClient
+from openai import OpenAI
+
+# Initialize — auto-instruments Milvus
+telemetry = RespanTelemetry()
+client = OpenAI()
+milvus = MilvusClient("milvus_demo.db")  # Milvus Lite for local development
+
+# Create collection
+milvus.create_collection(collection_name="docs", dimension=1536)
+
+docs = [
+    "Respan provides observability for LLM applications.",
+    "Traces capture the full lifecycle of an LLM request.",
+]
+
+
+def get_embeddings(texts: list[str]) -> list[list[float]]:
+    response = client.embeddings.create(model="text-embedding-3-small", input=texts)
+    return [item.embedding for item in response.data]
+
+
+# Seed documents with embeddings
+doc_embeddings = get_embeddings(docs)
+milvus.insert(
+    collection_name="docs",
+    data=[
+        {"id": i, "vector": doc_embeddings[i], "text": docs[i]}
+        for i in range(len(docs))
+    ],
+)
+
+
+@task(name="search_docs")
+def search_docs(query: str):
+    query_embedding = get_embeddings([query])
+    results = milvus.search(
+        collection_name="docs",
+        data=query_embedding,
+        limit=3,
+        output_fields=["text"],
+    )
+    return [hit["entity"]["text"] for hit in results[0]]
+
+
+@workflow(name="rag_pipeline")
+def rag_pipeline(query: str):
+    context = search_docs(query)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": f"Context: {chr(10).join(context)}"},
+            {"role": "user", "content": query},
+        ],
+    )
+    return response.choices[0].message.content
+
+
+result = rag_pipeline("How does tracing work?")
+print(result)
+```
+
+</Step>
+
+<Step title="View your trace">
+
+Open the [Traces page](https://platform.respan.ai/platform/traces) to see Milvus operations as spans in your trace tree.
+
+</Step>
+</Steps>
+
+## Configuration
+
+Milvus is auto-instrumented via `Instruments.MILVUS`. No additional configuration is needed.
+
+<Note>
+Milvus tracing is currently available in the Python SDK only.
+</Note>
+
+See the [Python Tracing SDK reference](/sdks/python/tracing/main/initialize) for configuration options.

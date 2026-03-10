@@ -1,22 +1,63 @@
 ---
-title: "Trace a RAG pipeline"
-description: "Build a retrieval-augmented generation pipeline with full tracing to debug each step."
+title: "Trace and evaluate a RAG pipeline"
+description: "Trace each step of your RAG pipeline and evaluate routing, retrieval, and generation independently."
 ---
 
 <Accordion title="Set up Respan">
-1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
-2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
-3. **Add credits or a provider key** — Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
+1. **Sign up** - Create an account at [platform.respan.ai](https://platform.respan.ai)
+2. **Create an API key** - Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
+3. **Add credits or a provider key** - Add credits on the [Credits page](https://platform.respan.ai/platform/api/credits) or connect your own provider key on the [Integrations page](https://platform.respan.ai/platform/api/integrations)
 </Accordion>
-
 
 ## Overview
 
-A RAG pipeline has multiple steps — retrieval, optional reranking, and generation — that can each fail silently. Tracing lets you see exactly what was retrieved, what context the LLM received, and how it responded. When something goes wrong, you can pinpoint which step broke.
+RAG is not a single step -it's a three-step pipeline. A user query flows through a routing decision, a retrieval step, and a generation step before producing a final answer. Each step has its own failure modes, its own levers for improvement, and its own evaluation criteria.
 
-This cookbook builds a simple RAG pipeline with Respan tracing, so every step appears as a span in the trace tree.
+Treating RAG as a black box and measuring only the final answer makes the system nearly impossible to improve. A bad response could mean the LLM made the wrong routing decision, the retriever returned irrelevant context, or the generator ignored what was retrieved. The fix is different in each case -and you can't tell them apart from the output alone.
 
-## Setup
+### How Respan sees your RAG pipeline
+
+Everything in Respan is built on **spans**. A span captures a single unit of work: its input, output, latency, and metadata. When your RAG pipeline runs, Respan captures it as three sequential spans and groups them as a single **trace**:
+
+```
+trace: rag_pipeline
+  ├── span: llm_routing      input: user query      output: tool call decision
+  ├── span: rag_retrieval    input: user query      output: retrieved context
+  └── span: llm_generation   input: query + context output: final answer
+```
+
+This trace structure matters because it makes the intermediate states visible. You can see exactly what routing decision the LLM made, exactly what context came back from retrieval, and exactly what the generator received before producing its answer.
+
+### Evaluation maps directly to spans
+
+Each span in the trace can have multiple evaluators attached to it -an LLM judge, a human reviewer, or a code function. The mechanism is the same regardless of which step you're evaluating.
+
+| Span | Evaluator | Description |
+|------|-----------|-------------|
+| First `llm_call` | `rag_routing_accuracy` | Did the LLM correctly decide to call the RAG tool for this query? |
+| | `unnecessary_retrieval` | Did the LLM call RAG when the answer didn't require external knowledge? |
+| `rag_tool` | `context_relevance` | Is the retrieved context relevant to the user query? |
+| | `context_completeness` | Does the retrieved context contain enough information to answer the query? |
+| Second `llm_call` | `groundedness` | Does the answer stay within the bounds of the retrieved context? |
+| | `context_utilization` | Did the LLM actually use the retrieved context, or ignore it? |
+
+---
+
+## Trace your RAG pipeline
+
+Instrument your pipeline with the Respan SDK and run your queries -traces are automatically captured and can be sampled into a dataset.
+
+**Set your environment variables:**
+
+```bash
+export RESPAN_API_KEY="your_respan_api_key"
+export OPENAI_API_KEY="your_openai_api_key"
+```
+
+<Tabs>
+<Tab title="ChromaDB">
+
+**Install dependencies:**
 
 <CodeGroup>
 ```bash Python
@@ -27,24 +68,15 @@ npm install @respan/tracing openai
 ```
 </CodeGroup>
 
-Set your environment variables:
-
-```bash
-export RESPAN_API_KEY="your_respan_api_key"
-export OPENAI_API_KEY="your_openai_api_key"
-```
-
-## Full example
-
 <CodeGroup>
 ```python Python
 from openai import OpenAI
+from respan_tracing import RespanTelemetry
 from respan_tracing.decorators import workflow, task
-from respan_tracing.main import RespanTelemetry
 import chromadb
 
 # Initialize
-k_tl = RespanTelemetry()
+telemetry = RespanTelemetry()
 client = OpenAI()
 chroma = chromadb.Client()
 collection = chroma.get_or_create_collection("docs")
@@ -61,14 +93,53 @@ collection.add(
 )
 
 
-@task(name="retrieve_documents")
-def retrieve_documents(query: str, top_k: int = 3):
-    """Retrieve relevant documents from the vector store."""
+@task(name="llm_routing")
+def route_query(query: str):
+    """Decide whether to call the RAG tool for this query."""
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a routing agent. Decide if this query requires "
+                    "looking up external knowledge. If it does, call the "
+                    "retrieve_context tool. Otherwise, respond directly."
+                ),
+            },
+            {"role": "user", "content": query},
+        ],
+        tools=[
+            {
+                "type": "function",
+                "function": {
+                    "name": "retrieve_context",
+                    "description": "Search the knowledge base for relevant information",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "The search query",
+                            }
+                        },
+                        "required": ["query"],
+                    },
+                },
+            }
+        ],
+    )
+    return completion.choices[0].message
+
+
+@task(name="rag_retrieval")
+def retrieve_context(query: str, top_k: int = 3):
+    """Retrieve relevant documents from ChromaDB."""
     results = collection.query(query_texts=[query], n_results=top_k)
     return results["documents"][0]
 
 
-@task(name="generate_answer")
+@task(name="llm_generation")
 def generate_answer(query: str, context: list[str]):
     """Generate an answer using retrieved context."""
     context_str = "\n".join(f"- {doc}" for doc in context)
@@ -88,9 +159,15 @@ def generate_answer(query: str, context: list[str]):
 
 @workflow(name="rag_pipeline")
 def rag_pipeline(query: str):
-    """Full RAG pipeline: retrieve → generate."""
-    documents = retrieve_documents(query)
-    answer = generate_answer(query, documents)
+    """Full RAG pipeline: route → retrieve → generate."""
+    routing = route_query(query)
+
+    if routing.tool_calls:
+        context = retrieve_context(query)
+    else:
+        context = []
+
+    answer = generate_answer(query, context)
     return answer
 
 
@@ -102,9 +179,9 @@ print(result)
 import { RespanTelemetry } from '@respan/tracing';
 import OpenAI from 'openai';
 
-const respanAi = new RespanTelemetry({
+const respan = new RespanTelemetry({
     apiKey: process.env.RESPAN_API_KEY || "",
-    appName: 'rag-app'
+    appName: 'rag-app',
 });
 const openai = new OpenAI();
 
@@ -117,29 +194,68 @@ const docs = [
 ];
 
 async function ragPipeline(query: string) {
-    return await respanAi.withWorkflow(
+    return await respan.withWorkflow(
         { name: 'rag_pipeline' },
         async () => {
-            // Retrieve
-            const documents = await respanAi.withTask(
-                { name: 'retrieve_documents' },
+            // Route -decide whether to call the RAG tool
+            const routing = await respan.withTask(
+                { name: 'llm_routing' },
                 async () => {
-                    // Simplified retrieval — in production, use a vector DB
+                    const completion = await openai.chat.completions.create({
+                        model: 'gpt-4o-mini',
+                        messages: [
+                            {
+                                role: 'system',
+                                content:
+                                    'You are a routing agent. Decide if this query requires ' +
+                                    'looking up external knowledge. If it does, call the ' +
+                                    'retrieve_context tool. Otherwise, respond directly.',
+                            },
+                            { role: 'user', content: query },
+                        ],
+                        tools: [
+                            {
+                                type: 'function',
+                                function: {
+                                    name: 'retrieve_context',
+                                    description: 'Search the knowledge base for relevant information',
+                                    parameters: {
+                                        type: 'object',
+                                        properties: {
+                                            query: { type: 'string', description: 'The search query' },
+                                        },
+                                        required: ['query'],
+                                    },
+                                },
+                            },
+                        ],
+                    });
+                    return completion.choices[0].message;
+                }
+            );
+
+            // Retrieve -get relevant documents from ChromaDB
+            const context = await respan.withTask(
+                { name: 'rag_retrieval' },
+                async () => {
+                    if (!routing.tool_calls) return [];
+                    // In production, use a ChromaDB client
+                    const queryWords = query.toLowerCase().split(' ');
                     return docs.filter(d =>
-                        d.toLowerCase().includes(query.toLowerCase().split(' ')[0])
+                        queryWords.some(w => d.toLowerCase().includes(w))
                     );
                 }
             );
 
-            // Generate
-            const answer = await respanAi.withTask(
-                { name: 'generate_answer' },
+            // Generate -produce the final answer
+            const answer = await respan.withTask(
+                { name: 'llm_generation' },
                 async () => {
-                    const context = documents.map(d => `- ${d}`).join('\n');
+                    const contextStr = context.map(d => `- ${d}`).join('\n');
                     const completion = await openai.chat.completions.create({
                         model: 'gpt-4o-mini',
                         messages: [
-                            { role: 'system', content: `Answer based on this context:\n${context}` },
+                            { role: 'system', content: `Answer based on this context:\n${contextStr}` },
                             { role: 'user', content: query },
                         ],
                     });
@@ -156,61 +272,539 @@ ragPipeline("How does Respan handle tracing?").then(console.log);
 ```
 </CodeGroup>
 
-## What you'll see in Respan
+</Tab>
 
-After running the pipeline, go to [Traces](https://platform.respan.ai/platform/traces) to see the trace tree:
+<Tab title="Milvus">
 
+**Install dependencies:**
+
+```bash
+pip install respan-tracing openai pymilvus
 ```
-rag_pipeline (workflow)
-├── retrieve_documents (task)
-└── generate_answer (task)
-    └── gpt-4o-mini (LLM call - auto-captured)
-```
-
-Each span shows:
-- **Input/Output**: What went in and what came out
-- **Latency**: How long each step took
-- **Cost**: Token usage and cost for LLM calls
-
-## Add metadata for filtering
-
-Tag your RAG traces with metadata so you can filter and analyze them:
 
 ```python
-from respan_tracing.contexts.span import respan_span_attributes
+from openai import OpenAI
+from respan_tracing import RespanTelemetry
+from respan_tracing.decorators import workflow, task
+from pymilvus import MilvusClient
+
+# Initialize
+telemetry = RespanTelemetry()
+client = OpenAI()
+milvus = MilvusClient("milvus_demo.db")  # Milvus Lite for local development
+
+# Create collection
+milvus.create_collection(collection_name="docs", dimension=1536)
+
+docs = [
+    "Respan supports 250+ LLM models through a unified API gateway.",
+    "Traces organize logs into hierarchical workflows with parent-child spans.",
+    "Evaluators can be LLM-based, code-based, or human reviewers.",
+    "Automations run evaluators on production logs in real-time.",
+]
+
+
+def get_embeddings(texts: list[str]) -> list[list[float]]:
+    """Embed texts using OpenAI."""
+    response = client.embeddings.create(model="text-embedding-3-small", input=texts)
+    return [item.embedding for item in response.data]
+
+
+# Seed documents with embeddings
+doc_embeddings = get_embeddings(docs)
+milvus.insert(
+    collection_name="docs",
+    data=[
+        {"id": i, "vector": doc_embeddings[i], "text": docs[i]}
+        for i in range(len(docs))
+    ],
+)
+
+
+@task(name="llm_routing")
+def route_query(query: str):
+    """Decide whether to call the RAG tool for this query."""
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a routing agent. Decide if this query requires "
+                    "looking up external knowledge. If it does, call the "
+                    "retrieve_context tool. Otherwise, respond directly."
+                ),
+            },
+            {"role": "user", "content": query},
+        ],
+        tools=[
+            {
+                "type": "function",
+                "function": {
+                    "name": "retrieve_context",
+                    "description": "Search the knowledge base for relevant information",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "The search query",
+                            }
+                        },
+                        "required": ["query"],
+                    },
+                },
+            }
+        ],
+    )
+    return completion.choices[0].message
+
+
+@task(name="rag_retrieval")
+def retrieve_context(query: str, top_k: int = 3):
+    """Retrieve relevant documents from Milvus."""
+    query_embedding = get_embeddings([query])
+    results = milvus.search(
+        collection_name="docs",
+        data=query_embedding,
+        limit=top_k,
+        output_fields=["text"],
+    )
+    return [hit["entity"]["text"] for hit in results[0]]
+
+
+@task(name="llm_generation")
+def generate_answer(query: str, context: list[str]):
+    """Generate an answer using retrieved context."""
+    context_str = "\n".join(f"- {doc}" for doc in context)
+
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": f"Answer based on this context:\n{context_str}",
+            },
+            {"role": "user", "content": query},
+        ],
+    )
+    return completion.choices[0].message.content
+
 
 @workflow(name="rag_pipeline")
 def rag_pipeline(query: str):
-    with respan_span_attributes(
-        respan_params={
-            "customer_identifier": "user_123",
-            "metadata": {
-                "pipeline": "rag",
-                "retriever": "chromadb",
-                "top_k": 3,
-            },
-        }
-    ):
-        documents = retrieve_documents(query)
-        answer = generate_answer(query, documents)
+    """Full RAG pipeline: route → retrieve → generate."""
+    routing = route_query(query)
+
+    if routing.tool_calls:
+        context = retrieve_context(query)
+    else:
+        context = []
+
+    answer = generate_answer(query, context)
     return answer
+
+
+# Run it
+result = rag_pipeline("How does Respan handle tracing?")
+print(result)
 ```
 
-## Debug a bad answer
+</Tab>
 
-When a RAG answer is wrong, the trace tells you why:
+<Tab title="LlamaIndex">
 
-1. **Bad retrieval**: The `retrieve_documents` span shows irrelevant documents were returned → fix your embeddings or retrieval logic
-2. **Good retrieval, bad generation**: The context was relevant but the LLM ignored it → adjust your system prompt
-3. **Missing context**: No relevant documents found → add more data to your knowledge base
+With LlamaIndex, all internal steps (embedding, retrieval, synthesis) are auto-instrumented. No manual `@task` decorators needed for the pipeline internals.
+
+**Install dependencies:**
+
+<CodeGroup>
+```bash Python
+pip install respan-tracing llama-index llama-index-llms-openai
+```
+```bash JavaScript
+npm install @respan/tracing llamaindex
+```
+</CodeGroup>
+
+<CodeGroup>
+```python Python
+from respan_tracing import RespanTelemetry, OpenInference
+from respan_tracing.decorators import workflow
+from llama_index.core import VectorStoreIndex, Document, Settings
+from llama_index.llms.openai import OpenAI as LlamaOpenAI
+
+# Initialize tracing with LlamaIndex auto-instrumentation
+telemetry = RespanTelemetry()
+OpenInference.llamaindex()
+
+# Configure LlamaIndex
+Settings.llm = LlamaOpenAI(model="gpt-4o-mini")
+
+# Create documents and build index
+documents = [
+    Document(text="Respan supports 250+ LLM models through a unified API gateway."),
+    Document(text="Traces organize logs into hierarchical workflows with parent-child spans."),
+    Document(text="Evaluators can be LLM-based, code-based, or human reviewers."),
+    Document(text="Automations run evaluators on production logs in real-time."),
+]
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine()
+
+
+@workflow(name="rag_pipeline")
+def rag_pipeline(query: str):
+    """RAG pipeline - LlamaIndex auto-instruments all internal steps."""
+    response = query_engine.query(query)
+    return str(response)
+
+
+# Run it
+result = rag_pipeline("How does Respan handle tracing?")
+print(result)
+```
+```typescript JavaScript
+import { RespanTelemetry } from '@respan/tracing';
+import { Document, VectorStoreIndex } from 'llamaindex';
+
+const respan = new RespanTelemetry({
+    apiKey: process.env.RESPAN_API_KEY || "",
+    appName: 'rag-app',
+});
+await respan.enableInstrumentation('llamaindex');
+
+const documents = [
+    new Document({ text: "Respan supports 250+ LLM models through a unified API gateway." }),
+    new Document({ text: "Traces organize logs into hierarchical workflows with parent-child spans." }),
+    new Document({ text: "Evaluators can be LLM-based, code-based, or human reviewers." }),
+    new Document({ text: "Automations run evaluators on production logs in real-time." }),
+];
+
+const index = await VectorStoreIndex.fromDocuments(documents);
+const queryEngine = index.asQueryEngine();
+
+async function ragPipeline(query: string) {
+    return await respan.withWorkflow(
+        { name: 'rag_pipeline' },
+        async () => {
+            const response = await queryEngine.query({ query });
+            return response.toString();
+        }
+    );
+}
+
+ragPipeline("How does Respan handle tracing?").then(console.log);
+```
+</CodeGroup>
+
+</Tab>
+
+<Tab title="LangChain">
+
+With LangChain, Respan auto-instruments chain execution, retriever calls, and LLM interactions.
+
+**Install dependencies:**
+
+<CodeGroup>
+```bash Python
+pip install respan-tracing langchain langchain-openai langchain-chroma
+```
+```bash JavaScript
+npm install @respan/tracing @langchain/openai @langchain/core langchain
+```
+</CodeGroup>
+
+<CodeGroup>
+```python Python
+from respan_tracing import RespanTelemetry
+from respan_tracing.decorators import workflow
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_chroma import Chroma
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+
+# Initialize - LangChain is auto-instrumented
+telemetry = RespanTelemetry()
+
+# Set up vector store and retriever
+embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+vectorstore = Chroma.from_texts(
+    texts=[
+        "Respan supports 250+ LLM models through a unified API gateway.",
+        "Traces organize logs into hierarchical workflows with parent-child spans.",
+        "Evaluators can be LLM-based, code-based, or human reviewers.",
+        "Automations run evaluators on production logs in real-time.",
+    ],
+    embedding=embeddings,
+)
+retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+
+# Build RAG chain
+llm = ChatOpenAI(model="gpt-4o-mini")
+prompt = ChatPromptTemplate.from_template(
+    "Answer based on this context:\n{context}\n\nQuestion: {question}"
+)
+
+
+def format_docs(docs):
+    return "\n".join(f"- {doc.page_content}" for doc in docs)
+
+
+rag_chain = (
+    {"context": retriever | format_docs, "question": RunnablePassthrough()}
+    | prompt
+    | llm
+    | StrOutputParser()
+)
+
+
+@workflow(name="rag_pipeline")
+def rag_pipeline(query: str):
+    """RAG pipeline - LangChain auto-instruments all chain steps."""
+    return rag_chain.invoke(query)
+
+
+# Run it
+result = rag_pipeline("How does Respan handle tracing?")
+print(result)
+```
+```typescript JavaScript
+import { RespanTelemetry } from '@respan/tracing';
+import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
+import { MemoryVectorStore } from 'langchain/vectorstores/memory';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+
+const respan = new RespanTelemetry({
+    apiKey: process.env.RESPAN_API_KEY || "",
+    appName: 'rag-app',
+});
+await respan.enableInstrumentation('langchain');
+
+// Set up vector store and retriever
+const embeddings = new OpenAIEmbeddings({ model: 'text-embedding-3-small' });
+const vectorStore = await MemoryVectorStore.fromTexts(
+    [
+        "Respan supports 250+ LLM models through a unified API gateway.",
+        "Traces organize logs into hierarchical workflows with parent-child spans.",
+        "Evaluators can be LLM-based, code-based, or human reviewers.",
+        "Automations run evaluators on production logs in real-time.",
+    ],
+    [{}, {}, {}, {}],
+    embeddings
+);
+const retriever = vectorStore.asRetriever({ k: 3 });
+
+// Build RAG chain
+const llm = new ChatOpenAI({ model: 'gpt-4o-mini' });
+const prompt = ChatPromptTemplate.fromTemplate(
+    'Answer based on this context:\n{context}\n\nQuestion: {question}'
+);
+
+async function ragPipeline(query: string) {
+    return await respan.withWorkflow(
+        { name: 'rag_pipeline' },
+        async () => {
+            const docs = await retriever.invoke(query);
+            const context = docs.map((d) => `- ${d.pageContent}`).join('\n');
+
+            const chain = prompt.pipe(llm).pipe(new StringOutputParser());
+            return await chain.invoke({ context, question: query });
+        }
+    );
+}
+
+ragPipeline("How does Respan handle tracing?").then(console.log);
+```
+</CodeGroup>
+
+</Tab>
+</Tabs>
+
+Once running, open the [Traces page](https://platform.respan.ai/platform/traces) and you'll see each request as a trace with child spans:
+
+```
+trace: rag_pipeline
+  ├── span: llm_routing      input: user query      output: tool call decision
+  ├── span: rag_retrieval    input: user query      output: retrieved context
+  └── span: llm_generation   input: query + context output: final answer
+```
+
+Each span's input and output are captured automatically -no manual logging needed.
+
+To build a dataset from your traces, go to the [Spans page](https://platform.respan.ai/platform/traces), filter by workflow name and task name, then export to a dataset.
+
+### Build a dataset
+
+The simplest dataset is end-to-end: the initial user query as `input` and the final answer as `output`.
+
+| `input` | `output` |
+|---------|----------|
+| user query | final answer |
+
+Use this for regression testing or quick sanity checks when you don't need to diagnose which step failed.
+
+<Accordion title="Span-level datasets">
+To evaluate individual steps, create a separate dataset for each span:
+
+**Routing** (`llm_routing` span)
+
+| `input` | `output` |
+|---------|----------|
+| user query | tool call decision (did it call RAG?) |
+
+**Retrieval** (`rag_retrieval` span)
+
+| `input` | `output` |
+|---------|----------|
+| user query | retrieved context |
+
+**Generation** (`llm_generation` span)
+
+| `input` | `output` |
+|---------|----------|
+| user query + retrieved context | final answer |
+
+Filter by workflow name and task name on the [Spans page](https://platform.respan.ai/platform/traces), then export each span type as its own dataset.
+</Accordion>
+
+---
+
+## Evaluate your RAG pipeline
+
+With your data in Respan, evaluation has three steps: create a dataset from your traces, set up evaluators for each span, then run experiments to score them.
+
+### Step 1 - Create a dataset
+
+Go to the [Spans page](https://platform.respan.ai/platform/traces) and filter by workflow name and task name to isolate the spans you want to evaluate.
+
+For example, to evaluate your retrieval step:
+- **Workflow name**: `rag_pipeline`
+- **Task name**: `rag_retrieval`
+
+Apply any additional filters -date range, metadata, specific users -then export to a dataset.
+
+Repeat for each step you want to evaluate. You'll end up with up to three datasets, one per span.
+
+### Step 2 - Set up evaluators
+
+Create an evaluator for each dataset. Respan supports three evaluator types:
+
+- **LLM evaluator** -an LLM judges the span output against a rubric you define. Use `{{input}}` and `{{output}}` to reference the span's data in your prompt.
+- **Human evaluator** -your team reviews and scores outputs manually.
+- **Code evaluator** -a Python function checks the output deterministically.
+
+Here are starter prompts for each RAG eval step:
+
+<AccordionGroup>
+<Accordion title="Routing eval (llm_routing span)">
+```
+Given this user query:
+{{input}}
+
+The LLM responded with:
+{{output}}
+
+Did the LLM correctly decide whether to call the RAG tool?
+A query that requires external or factual knowledge should trigger RAG.
+A query that can be answered from general knowledge should not.
+
+Return PASS if the routing decision was correct, FAIL if not.
+Explain your reasoning.
+```
+</Accordion>
+
+<Accordion title="Retrieval eval (rag_retrieval span)">
+```
+Given this user query:
+{{input}}
+
+The retriever returned this context:
+{{output}}
+
+Is the retrieved context relevant and sufficient to answer the query?
+
+Return PASS if the context is relevant and complete, FAIL if it is
+irrelevant, incomplete, or missing key information.
+Explain your reasoning.
+```
+</Accordion>
+
+<Accordion title="Grounding eval (llm_generation span)">
+```
+Given this input:
+{{input}}
+
+The model produced this answer:
+{{output}}
+
+Does the answer stay within the bounds of the retrieved context?
+Flag any claims that are not supported by or contradict the context.
+
+Return PASS if the answer is fully grounded, FAIL if it introduces
+information not present in the context.
+Explain your reasoning.
+```
+</Accordion>
+</AccordionGroup>
+
+### Step 3 - Run an experiment
+
+Select a dataset, attach your evaluators, and run. Each row gets a PASS/FAIL or a score, and Respan shows the aggregate pass rate across the dataset.
+
+You can run multiple experiments to compare different prompt versions, models, retrieval configurations, or any other parameter.
+
+**Evaluating routing**
+
+You want to know: is the LLM calling RAG when it should, and skipping it when it shouldn't?
+
+1. Select your `llm_routing` dataset
+2. Attach the `rag_routing_accuracy` and `unnecessary_retrieval` evaluators
+3. Run the experiment
+
+A low `rag_routing_accuracy` score means the LLM is missing queries that need external knowledge -your tool description or system prompt likely needs to be more explicit about when to trigger RAG. A low `unnecessary_retrieval` score means the LLM is over-retrieving -adding latency and noise to queries that didn't need it.
+
+**Evaluating retrieval**
+
+You want to know: is the retriever returning context that's actually relevant to the query?
+
+1. Select your `rag_retrieval` dataset
+2. Attach the `context_relevance` and `context_completeness` evaluators
+3. Run the experiment
+
+A low `context_relevance` score means your retriever is returning the wrong documents -look at your embedding model, chunking strategy, or similarity threshold. A low `context_completeness` score means the right documents are there but the answer requires information spread across more chunks than you're retrieving -try increasing Top-K.
+
+**Evaluating grounding**
+
+You want to know: is the generator staying within the bounds of what was retrieved, or hallucinating beyond it?
+
+1. Select your `llm_generation` dataset
+2. Attach the `groundedness` and `context_utilization` evaluators
+3. Run the experiment
+
+A low `groundedness` score means the model is introducing claims not supported by the retrieved context -tighten your system prompt to constrain the model to the provided documents. A low `context_utilization` score means the model is ignoring the retrieved context entirely and answering from parametric knowledge -check that the context is being correctly passed into the prompt.
+
+**Evaluating end-to-end**
+
+You want a quick regression check across your whole pipeline without diagnosing individual steps.
+
+1. Select your end-to-end dataset (user query → final answer)
+2. Attach a general quality evaluator or a custom rubric
+3. Run the experiment
+
+Use this to catch regressions after prompt changes or model upgrades. When scores drop, use the step-level datasets to diagnose which part of the pipeline broke.
 
 ## Next steps
 
-<CardGroup cols={2}>
-<Card title="Tracing quickstart" icon="sitemap" href="/documentation/getting-started/quickstart/tracing">
-  Set up tracing for your framework
+<CardGroup cols={3}>
+<Card title="Datasets" icon="database" href="https://platform.respan.ai/platform/datasets">
+  Create a dataset from your traces
 </Card>
-<Card title="Tracing parameters" icon="sliders" href="/documentation/features/tracing/traces/span-parameters">
-  Add metadata, customer IDs, and grouping
+<Card title="Evaluators" icon="check-double" href="https://platform.respan.ai/platform/evals">
+  Set up evaluators for each span
+</Card>
+<Card title="Experiments" icon="flask" href="https://platform.respan.ai/platform/experiments">
+  Run experiments and compare results
 </Card>
 </CardGroup>
