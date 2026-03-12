@@ -219,7 +219,7 @@
                   "/integrations/tracing/baml",
                   "/integrations/tracing/instructor",
                   "/integrations/tracing/superagent",
-                  "/integrations/tracing/pydantic-ai",
+                  "/integrations/tracing/pydantic",
                   "/integrations/tracing/langfuse",
                   "/integrations/tracing/braintrust"
                 ]
@@ -261,7 +261,8 @@
                   "/integrations/gateway/llama-index",
                   "/integrations/gateway/ruby_llm",
                   "/integrations/gateway/haystack",
-                  "/integrations/gateway/baml"
+                  "/integrations/gateway/baml",
+                  "/integrations/gateway/pydantic"
                 ]
               }
             ]
