@@ -1763,10 +1763,6 @@
       "destination": "/integrations/zapier"
     },
     {
-      "source": "/integration/dev-tools/:slug*",
-      "destination": "/integrations/:slug*"
-    },
-    {
       "source": "/integration/providers/:slug*",
       "destination": "/integrations/providers/:slug*"
     },
