@@ -1,38 +1,46 @@
 ---
 title: "Trace CLI coding agents"
-description: "Set up observability for Claude Code, Codex CLI, and Gemini CLI with one command."
+description: "Set up observability for Claude Code, Codex CLI, Gemini CLI, and OpenCode with one command."
 ---
 
 <Accordion title="Set up Respan">
 1. **Sign up** — Create an account at [platform.respan.ai](https://platform.respan.ai)
 2. **Create an API key** — Generate one on the [API keys page](https://platform.respan.ai/platform/api/api-keys)
-3. **Install the Respan CLI** — `npm install -g @respan/cli`
-4. **Authenticate** — `respan auth login`
 </Accordion>
 
 ## Overview
 
-CLI coding agents like Claude Code, Codex CLI, and Gemini CLI run in sandboxed terminal environments — making multiple LLM calls, reading files, executing shell commands, and editing code autonomously. Without observability, you have no visibility into what the agent did, how many tokens it consumed, or whether it made the right decisions.
+CLI coding agents like Claude Code, Codex CLI, Gemini CLI, and OpenCode run in sandboxed terminal environments — making multiple LLM calls, reading files, executing shell commands, and editing code autonomously. Without observability, you have no visibility into what the agent did, how many tokens it consumed, or whether it made the right decisions.
 
-This cookbook shows how to:
+This cookbook shows how to add full tracing in 6 steps — no code changes required.
 
-1. Enable tracing for each CLI agent with a single command
-2. View agent turns, tool calls, and token usage in Respan
-3. Customize traces with metadata for cost tracking and debugging
+## 1. Install the CLI
 
-## How it works
+```bash
+npm install -g @respan/cli
+```
 
-Each CLI agent has a different tracing mechanism, but Respan's `integrate` command handles setup automatically:
+## 2. Set your API key
 
-| Agent | Tracing method | How it works |
-|-------|---------------|--------------|
-| **Claude Code** | Stop hook | Python script captures conversation transcripts after each agent response |
-| **Codex CLI** | Notify hook | Python script parses session events after each agent turn |
-| **Gemini CLI** | Native OpenTelemetry | Gemini's built-in telemetry exports directly to Respan's OTLP endpoint |
+```bash
+respan auth login
+```
 
-All three produce the same span structure in Respan — a root agent span containing LLM generation spans, reasoning spans, and tool call spans.
+Select **API key** (recommended) and paste your key from the [API keys page](https://platform.respan.ai/platform/api/api-keys).
 
-## 1. Integrate your agent
+Alternatively, set the key via environment variable:
+
+```bash
+export RESPAN_API_KEY="YOUR_API_KEY"
+```
+
+Verify you're authenticated:
+
+```bash
+respan whoami
+```
+
+## 3. Integrate your agent
 
 Run the integration command for your CLI agent:
 
@@ -43,16 +51,7 @@ Run the integration command for your CLI agent:
 respan integrate claude-code
 ```
 
-This does three things:
-1. Installs a Stop hook script at `~/.respan/hook.py`
-2. Registers the hook in `~/.claude/settings.json`
-3. Creates `.claude/settings.local.json` with `TRACE_TO_RESPAN=true` in the current project
-
-To enable globally (all projects):
-
-```bash
-respan integrate claude-code --global
-```
+This installs a Node.js hook at `~/.respan/hooks/claude-code.cjs` and registers it in `~/.claude/settings.json`. Every time Claude Code responds, the hook captures the turn and sends it to Respan.
 
 </Tab>
 <Tab title="Codex CLI">
@@ -61,16 +60,7 @@ respan integrate claude-code --global
 respan integrate codex-cli
 ```
 
-This does three things:
-1. Installs a Notify hook script at `~/.respan/codex_hook.py`
-2. Registers the hook in `~/.codex/config.toml`
-3. Creates `.codex/respan.json` with tracing config in the current project
-
-To enable globally:
-
-```bash
-respan integrate codex-cli --global
-```
+This installs a Node.js hook at `~/.respan/hooks/codex-cli.cjs` and registers it in `~/.codex/config.toml`. After each agent turn, the hook captures session data and sends it to Respan.
 
 </Tab>
 <Tab title="Gemini CLI">
@@ -79,22 +69,86 @@ respan integrate codex-cli --global
 respan integrate gemini-cli
 ```
 
-This does two things:
-1. Enables telemetry in `.gemini/settings.json` with Respan's OTLP endpoint
-2. Creates `.gemini/.env` with authentication headers and resource attributes
+This installs a Node.js hook at `~/.respan/hooks/gemini-cli.cjs` and registers hooks for `AfterModel`, `BeforeTool`, and `AfterTool` events in `~/.gemini/settings.json`. The hook accumulates streaming chunks and sends the complete turn to Respan.
 
-To apply globally instead of per-project:
+</Tab>
+<Tab title="OpenCode">
 
 ```bash
-respan integrate gemini-cli --global
+respan integrate opencode
+```
+
+This installs the `opencode-otel` plugin and writes an OTEL config to `.opencode/plugins/otel.json` that exports traces to Respan.
+
+</Tab>
+</Tabs>
+
+## 4. Add attributes (optional)
+
+Tag traces with customer IDs, project names, or custom metadata for filtering and cost tracking.
+
+### Via integrate flags
+
+<Tabs>
+<Tab title="Claude Code">
+
+```bash
+respan integrate claude-code \
+  --customer-id "dev-alice" \
+  --workflow-name "feature-work" \
+  --project-id "proj_123" \
+  --attrs '{"team": "backend", "sprint": "2025-Q3"}'
+```
+
+</Tab>
+<Tab title="Codex CLI">
+
+```bash
+respan integrate codex-cli \
+  --customer-id "dev-alice" \
+  --workflow-name "feature-work" \
+  --attrs '{"team": "backend"}'
+```
+
+</Tab>
+<Tab title="Gemini CLI">
+
+```bash
+respan integrate gemini-cli \
+  --customer-id "dev-alice" \
+  --attrs '{"team": "backend"}'
+```
+
+</Tab>
+<Tab title="OpenCode">
+
+```bash
+respan integrate opencode \
+  --project-id "proj_123" \
+  --attrs '{"team": "backend"}'
 ```
 
 </Tab>
 </Tabs>
 
-## 2. Use your agent as normal
+### Via environment variables (per session)
 
-No code changes required. Just use your CLI agent as you normally would:
+Override attributes for a single session without re-running integrate:
+
+```bash
+export RESPAN_CUSTOMER_ID="dev-alice"
+export RESPAN_METADATA='{"task_id": "JIRA-456", "branch": "feat/dark-mode"}'
+```
+
+For OpenCode, use the standard OTEL variable:
+
+```bash
+export OTEL_RESOURCE_ATTRIBUTES="team=backend,task_id=JIRA-456"
+```
+
+## 5. Use your agent as normal
+
+No code changes required. Just run your CLI agent:
 
 <Tabs>
 <Tab title="Claude Code">
@@ -103,7 +157,11 @@ No code changes required. Just use your CLI agent as you normally would:
 claude
 ```
 
-Every time Claude Code responds, the Stop hook fires and sends the turn to Respan.
+Or non-interactively:
+
+```bash
+claude -p "Refactor the auth module to use JWT tokens"
+```
 
 </Tab>
 <Tab title="Codex CLI">
@@ -112,7 +170,11 @@ Every time Claude Code responds, the Stop hook fires and sends the turn to Respa
 codex
 ```
 
-After each agent turn completes, the Notify hook captures the session data and sends it to Respan.
+Or non-interactively:
+
+```bash
+codex exec "Add unit tests for the user service"
+```
 
 </Tab>
 <Tab title="Gemini CLI">
@@ -121,149 +183,96 @@ After each agent turn completes, the Notify hook captures the session data and s
 gemini
 ```
 
-Gemini CLI exports OpenTelemetry traces directly to Respan as it runs.
+Or non-interactively:
+
+```bash
+gemini -p "Explain the database schema in this project"
+```
+
+</Tab>
+<Tab title="OpenCode">
+
+```bash
+opencode
+```
+
+Or non-interactively:
+
+```bash
+opencode run "Fix the failing CI test"
+```
 
 </Tab>
 </Tabs>
 
-## 3. View traces in Respan
+## 6. View traces
 
-Go to [Traces](https://platform.respan.ai/platform/traces) to see your agent activity. Each agent turn produces a trace like this:
+Open [Traces](https://platform.respan.ai/platform/traces) to see your agent activity. Each agent turn produces a trace like this:
 
 ```
-claude-code (agent)
-├── claude.chat (LLM generation — model, tokens, messages)
-├── Thinking (extended reasoning, if present)
-├── Tool: Read (file read)
-├── Tool: Write (file write)
-└── Tool: Bash (shell command)
+claude-code (root)
+  +-- claude.chat (LLM generation - model, tokens, input/output)
+  +-- Thinking (extended reasoning, if present)
+  +-- Tool: Bash (shell command)
+  +-- Tool: Read (file read)
+  +-- Tool: Write (file edit)
 ```
 
 Each span includes:
 - **Input/output** — The user message and agent response
+- **Model** — Which model was used (e.g., `claude-opus-4-6`, `gpt-5.4`, `gemini-3-flash`)
 - **Token usage** — Prompt tokens, completion tokens, and reasoning tokens
+- **Cost** — Computed automatically from token counts
 - **Latency** — Time for each step
 - **Tool details** — File paths, shell commands, code edits
 
-## 4. Add metadata for filtering
+Filter traces by `customer_identifier`, `workflow_name`, or any custom metadata field to find specific sessions.
 
-Tag traces with customer IDs, project names, or custom attributes to filter and group them later.
-
-<Tabs>
-<Tab title="Claude Code">
-
-Pass metadata during integration:
-
-```bash
-respan integrate claude-code \
-  --customer-id "team-backend" \
-  --workflow-name "feature-work" \
-  --project-id "proj_123" \
-  --attrs '{"sprint": "2025-Q3", "repo": "api-server"}'
-```
-
-Or override per session with environment variables:
-
-```bash
-RESPAN_CUSTOMER_ID="dev-alice" claude
-```
-
-```bash
-RESPAN_METADATA='{"task_id": "JIRA-456"}' claude
-```
-
-</Tab>
-<Tab title="Codex CLI">
-
-```bash
-respan integrate codex-cli \
-  --customer-id "team-backend" \
-  --workflow-name "feature-work" \
-  --project-id "proj_123" \
-  --attrs '{"sprint": "2025-Q3", "repo": "api-server"}'
-```
-
-Override per session:
-
-```bash
-RESPAN_CUSTOMER_ID="dev-alice" codex
-```
-
-</Tab>
-<Tab title="Gemini CLI">
-
-```bash
-respan integrate gemini-cli \
-  --attrs '{"team": "backend", "sprint": "2025-Q3"}'
-```
-
-Override per session via OTel resource attributes:
-
-```bash
-export OTEL_RESOURCE_ATTRIBUTES="service.name=gemini-cli,team=backend,task_id=JIRA-456"
-gemini
-```
-
-</Tab>
-</Tabs>
-
-You can then filter traces in the Respan dashboard by `customer_identifier`, `metadata.task_id`, or any custom field.
-
-## 5. Track cost per developer
-
-Use `customer_identifier` to attribute agent costs to individual developers or teams:
-
-```bash
-# Each developer integrates with their own ID
-respan integrate claude-code --customer-id "dev-alice"
-```
-
-Then go to [Users](https://platform.respan.ai/platform/users) to see per-developer breakdowns of token usage, cost, and session count.
-
-## 6. Debug a session
-
-When an agent produces unexpected results:
-
-1. **Find the trace** — Filter by time, customer ID, or thread ID in [Traces](https://platform.respan.ai/platform/traces)
-2. **Walk the span tree** — See every LLM call, tool invocation, and reasoning step in order
-3. **Check token usage** — Identify turns with unusually high token consumption
-4. **Review tool calls** — See exactly which files were read, edited, or what commands were run
-5. **Compare sessions** — Look at successful vs. failed sessions side by side
-
-<Note>
-Claude Code and Codex CLI traces include a `thread_identifier` (e.g., `claudecode_{session_id}`) so you can group all turns from a single session together.
-</Note>
+Go to [Users](https://platform.respan.ai/platform/users) to see per-developer breakdowns of token usage, cost, and session count.
 
 ## Configuration reference
 
+### Integrate flags
+
+| Flag | Description |
+|------|-------------|
+| `--customer-id` | Customer identifier for traces (e.g., developer name) |
+| `--workflow-name` | Workflow name for grouping traces |
+| `--span-name` | Root span name (defaults to agent name) |
+| `--project-id` | Respan project ID |
+| `--attrs` | Custom attributes JSON (e.g., `'{"team":"backend"}'`) |
+| `--global` | Apply to all projects (not just current directory) |
+| `--local` | Apply to current project only |
+| `--dry-run` | Preview changes without writing files |
+
 ### Environment variables
 
-| Variable | Agent | Description |
-|----------|-------|-------------|
-| `TRACE_TO_RESPAN` | Claude Code | Set to `true` to enable, `false` to disable |
+| Variable | Agents | Description |
+|----------|--------|-------------|
 | `RESPAN_API_KEY` | All | Override the stored API key |
-| `RESPAN_BASE_URL` | Claude Code, Codex CLI | Override API endpoint (for enterprise deployments) |
-| `RESPAN_CUSTOMER_ID` | Claude Code, Codex CLI | Override customer identifier per session |
-| `RESPAN_METADATA` | Claude Code, Codex CLI | JSON string merged into span metadata |
-| `CC_RESPAN_DEBUG` | Claude Code | Set to `true` to enable debug logging |
-| `CODEX_RESPAN_DEBUG` | Codex CLI | Set to `true` to enable debug logging |
-| `CC_RESPAN_MAX_CHARS` | Claude Code | Max characters per span field (default: 4000) |
+| `RESPAN_CUSTOMER_ID` | Claude Code, Codex, Gemini | Override customer identifier per session |
+| `RESPAN_METADATA` | Claude Code, Codex, Gemini | JSON string merged into span metadata |
+| `RESPAN_WORKFLOW_NAME` | Claude Code, Codex, Gemini | Override workflow name per session |
+| `RESPAN_BASE_URL` | All | Override API endpoint (for enterprise) |
+| `TRACE_TO_RESPAN` | Claude Code | Set to `false` to disable tracing |
+| `CC_RESPAN_DEBUG` | Claude Code | Enable debug logging |
+| `CODEX_RESPAN_DEBUG` | Codex CLI | Enable debug logging |
+| `GEMINI_RESPAN_DEBUG` | Gemini CLI | Enable debug logging |
 
 ### Debug logs
-
-If something isn't working, enable debug logging and check the log file:
 
 | Agent | Log file |
 |-------|----------|
 | Claude Code | `~/.claude/state/respan_hook.log` |
 | Codex CLI | `~/.codex/state/respan_hook.log` |
+| Gemini CLI | `~/.gemini/state/respan_hook.log` |
 
 ### Disabling tracing
 
 <Tabs>
 <Tab title="Claude Code">
 
-Remove `TRACE_TO_RESPAN` from `.claude/settings.local.json`, or set it to `false`:
+Set `TRACE_TO_RESPAN` to `false` in `.claude/settings.local.json`:
 
 ```json
 {
@@ -276,24 +285,21 @@ Remove `TRACE_TO_RESPAN` from `.claude/settings.local.json`, or set it to `false
 </Tab>
 <Tab title="Codex CLI">
 
-Remove the `notify` line from `~/.codex/config.toml`:
+Comment out the `notify` line in `~/.codex/config.toml`:
 
 ```toml
-# notify = ["python3", "/path/to/.respan/codex_hook.py"]
+# notify = ["node", "~/.respan/hooks/codex-cli.cjs"]
 ```
 
 </Tab>
 <Tab title="Gemini CLI">
 
-Disable telemetry in `.gemini/settings.json`:
+Remove the hooks from `.gemini/settings.json`.
 
-```json
-{
-  "telemetry": {
-    "enabled": false
-  }
-}
-```
+</Tab>
+<Tab title="OpenCode">
+
+Delete `.opencode/plugins/otel.json`.
 
 </Tab>
 </Tabs>
