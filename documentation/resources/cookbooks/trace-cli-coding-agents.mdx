@@ -20,19 +20,13 @@ This cookbook shows how to add full tracing in 6 steps — no code changes requi
 npm install -g @respan/cli
 ```
 
-## 2. Set your API key
+## 2. Authenticate
 
 ```bash
-respan auth login
+respan auth login --api-key YOUR_API_KEY
 ```
 
-Select **API key** (recommended) and paste your key from the [API keys page](https://platform.respan.ai/platform/api/api-keys).
-
-Alternatively, set the key via environment variable:
-
-```bash
-export RESPAN_API_KEY="YOUR_API_KEY"
-```
+Replace `YOUR_API_KEY` with the key from the [API keys page](https://platform.respan.ai/platform/api/api-keys).
 
 Verify you're authenticated:
 
